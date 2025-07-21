@@ -7,15 +7,25 @@ export async function storeKeyPair() {
   const { publicKey, privateKey } = await generateKeyPair();
   console.log("Key pair generated successfully.");
   console.log("Storing key pair in IndexedDB...");
-  await storage.insert("keys", {
-    value: {
-      pub: publicKey,
-      priv: privateKey,
-      kid: 1,
-    },
-  });
-  console.log("Key pair stored successfully.");
+  try {
+    await storage.insert("keys", {
+      value: {
+        pub: publicKey,
+        priv: privateKey,
+        kid: 1,
+      },
+    });
+    console.log("Key pair stored successfully.");
+  } catch (err: any) {
+    // Ignore "Key already exists" error
+    if (err?.message?.includes("Key already exists")) {
+      console.warn("Key already exists, skipping insert.");
+    } else {
+      throw err;
+    }
+  }
 }
+
 
 // Function to retrieve the key pair from IndexedDB
 export async function retrieveKeyPair(kid: number) {
