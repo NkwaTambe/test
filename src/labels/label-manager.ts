@@ -1,11 +1,24 @@
+export interface LocalizedText {
+  en: string;
+  fr: string;
+}
+
 export interface Label {
   labelId: string;
   name_en: string;
   name_fr: string;
   type: 'date' | 'text' | 'number' | 'enum' | 'media' | 'boolean';
   required: boolean;
-  placeholder?: string;
-  constraints?: { maxLength?: number; minLength?: number; pattern?: string; min?: number; max?: number; };
+  placeholder?: string | LocalizedText;
+  helpText?: string | LocalizedText;
+  constraints?: { 
+    maxLength?: number; 
+    minLength?: number; 
+    pattern?: string; 
+    min?: number; 
+    max?: number; 
+    step?: number;
+  };
   options?: string[];
 }
 
@@ -43,6 +56,22 @@ export async function fetchLabels(): Promise<Label[]> {
         },
         { 
           labelId: '4', 
+          name_en: 'Description', 
+          name_fr: 'Description', 
+          type: 'text',
+          required: false,
+          constraints: { maxLength: 500 }
+        },
+        { 
+          labelId: '5', 
+          name_en: 'Priority', 
+          name_fr: 'Priorité', 
+          type: 'enum',
+          required: true,
+          options: ['low', 'medium', 'high']
+        },
+        { 
+          labelId: '6', 
           name_en: 'Photo', 
           name_fr: 'Photo', 
           type: 'media', 

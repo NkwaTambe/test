@@ -1,3 +1,28 @@
+
+/**
+ * CameraCapture component allows users to capture an image using their device's camera
+ * or select an image from their gallery. It provides a preview of the captured or selected image,
+ * and handles camera access, errors, and file uploads.
+ *
+ * @component
+ * @param {Object} props - Component props.
+ * @param {(file: File) => void} props.onCapture - Callback invoked with the captured or selected image file.
+ * @param {(error: Error) => void} [props.onError] - Optional callback invoked when an error occurs.
+ * @param {string} [props.className] - Optional additional CSS classes for the root element.
+ * @param {boolean} [props.disabled] - Optional flag to disable all interactions.
+ *
+ * @example
+ * <CameraCapture
+ *   onCapture={file => console.log(file)}
+ *   onError={error => alert(error.message)}
+ * />
+ *
+ * @remarks
+ * - Uses `navigator.mediaDevices.getUserMedia` for camera access.
+ * - Supports both camera capture and file upload from gallery.
+ * - Displays a preview and allows resetting/removing the selected image.
+ * - Handles cleanup of media streams and object URLs.
+ */
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 

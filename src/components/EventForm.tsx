@@ -1,21 +1,31 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Camera, Upload, Send, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import CameraCapture from './CameraCapture';
-import type { Label } from '../labels/label-manager';
-import { createEventPackage } from '../utils/event-packer';
-import { exportEventPackageAsZip } from '../utils/zip-exporter';
+import type { Label, LocalizedText } from '../labels/label-manager';
+import { createEventPackage, validateFormData } from '../utils/event-packer';
+import { downloadEventPackage } from '../utils/zip-exporter';
 import type { KeyPair } from '../hooks/useKeyInitialization';
+
+type FieldValue = string | number | boolean | null;
+
+interface FormData extends Record<string, FieldValue> {}
+
+// Helper to get localized text from a string or LocalizedText object
+const getLocalizedText = (text: string | LocalizedText | undefined): string => {
+  if (!text) return '';
+  if (typeof text === 'string') return text;
+  return text.en; // Default to English for now, will be updated with i18n
+};
 
 interface EventFormProps {
   labels: Label[];
-  keyPair: KeyPair;
+  keyPair?: KeyPair; // Made optional since it's not used
+  createdBy?: string;
 }
 
-type FormData = Record<string, string | number | boolean | null | undefined>;
-
-const EventForm: React.FC<EventFormProps> = ({ labels, keyPair }) => {
+const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
   const { t, i18n } = useTranslation();
   const [formData, setFormData] = useState<FormData>({});
   const [mediaFile, setMediaFile] = useState<File | null>(null);
@@ -27,9 +37,19 @@ const EventForm: React.FC<EventFormProps> = ({ labels, keyPair }) => {
     const { name, type } = e.target;
     const target = e.target as HTMLInputElement;
     
+    let value: FieldValue;
+    
+    if (type === 'checkbox') {
+      value = target.checked;
+    } else if (type === 'number') {
+      value = target.value === '' ? null : Number(target.value);
+    } else {
+      value = target.value === '' ? null : target.value;
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? target.checked : target.value
+      [name]: value
     }));
 
     if (errors[name]) {
@@ -123,62 +143,29 @@ const EventForm: React.FC<EventFormProps> = ({ labels, keyPair }) => {
     );
   };
 
-  const validate = (): boolean => {
-    const newErrors: Record<string, string> = {};
+  const validate = useCallback((): boolean => {
+    // Create a clean data object with only the fields that match our labels
+    const cleanData: Record<string, FieldValue> = {};
+    
+    labels.forEach(label => {
+      if (formData[label.labelId] !== undefined) {
+        cleanData[label.labelId] = formData[label.labelId];
+      }
+    });
+    
+
+    
+    const { isValid: isFormDataValid, errors: formErrors } = validateFormData(cleanData, labels);
+    
+    const newErrors: Record<string, string> = { ...formErrors };
     
     if (!mediaFile) {
       newErrors.media = t('mediaRequired');
     }
-
-    // Validate priority (required field)
-    if (!formData.priority) {
-      newErrors.priority = t('priorityRequired');
-    }
-
-    // Validate dynamic fields from labels (excluding date and media)
-    labels.forEach(label => {
-      if (label.type === 'media' || label.type === 'date') return;
-      
-      const labelName = i18n.language === 'fr' ? label.name_fr : label.name_en;
-      const value = formData[label.labelId];
-
-      if (label.required && (value === null || value === undefined || value === '')) {
-        newErrors[label.labelId] = t('labelRequired', { labelName });
-        return;
-      }
-
-      if (label.type === 'text' && label.constraints?.maxLength) {
-        if (typeof value === 'string' && value.length > label.constraints.maxLength) {
-          newErrors[label.labelId] = t('labelMaxLengthExceeded', { 
-            labelName, 
-            maxLength: label.constraints.maxLength 
-          });
-        }
-        return;
-      }
-      
-      if (label.type === 'number' && label.constraints) {
-        const numValue = Number(value);
-        if (!isNaN(numValue)) {
-          if (label.constraints.min !== undefined && numValue < label.constraints.min) {
-            newErrors[label.labelId] = t('numberTooSmall', { 
-              labelName, 
-              min: label.constraints.min 
-            });
-          }
-          if (label.constraints.max !== undefined && numValue > label.constraints.max) {
-            newErrors[label.labelId] = t('numberTooLarge', { 
-              labelName, 
-              max: label.constraints.max 
-            });
-          }
-        }
-      }
-    });
     
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+    return isFormDataValid && Object.keys(newErrors).length === 0;
+  }, [formData, labels, mediaFile, t]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -188,184 +175,208 @@ const EventForm: React.FC<EventFormProps> = ({ labels, keyPair }) => {
     try {
       if (!mediaFile) throw new Error(t('mediaRequired'));
       
-      // Set current date/time when form is submitted
-      const formDataWithDate = {
-        ...formData,
-        eventDate: new Date().toISOString()
-      };
+      // Create a clean data object with only the fields that match our labels
+      const cleanData: Record<string, FieldValue> = {};
       
-      const fullPackage = createEventPackage(formDataWithDate, labels, mediaFile);
-      const success = await sendEventToRelay(fullPackage, keyPair);
-
-      if (success) {
-        toast.success(t('eventSentSuccessfully'), { position: 'top-center' });
-        setFormData({});
-        setMediaFile(null);
-      } else {
-        throw new Error(t('failedToSendEvent'));
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      toast.error(error instanceof Error ? error.message : t('submissionError'), {
-        position: 'top-center'
+      labels.forEach(label => {
+        if (formData[label.labelId] !== undefined) {
+          cleanData[label.labelId] = formData[label.labelId];
+        }
       });
+      
+
+      
+      const eventPackage = await createEventPackage(
+        cleanData,
+        labels,
+        mediaFile,
+        {
+          createdBy,
+          source: 'web'
+        }
+      );
+      
+      await downloadEventPackage(eventPackage);
+      
+      setFormData({});
+      setMediaFile(null);
+      
+      toast.success(t('eventSaved'));
+    } catch (error) {
+      console.error('Error saving event:', error);
+      toast.error(t('saveError'));
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleSaveDraft = async () => {
-    if (!validate()) return;
-    
+  // Handler for saving the current form data as a draft
+  const handleSaveDraft = useCallback(async () => {
     try {
       if (!mediaFile) throw new Error(t('mediaRequired'));
       
-      const fullPackage = createEventPackage(formData, labels, mediaFile);
-      await exportEventPackageAsZip(fullPackage);
-      toast.success(t('draftSavedSuccessfully'), { position: 'top-center' });
+      const cleanData: Record<string, FieldValue> = {};
+      
+      labels.forEach(label => {
+        if (formData[label.labelId] !== undefined) {
+          cleanData[label.labelId] = formData[label.labelId];
+        }
+      });
+      
+      cleanData.description = formData.description || null;
+      cleanData.priority = formData.priority || 'medium';
+      
+      const eventPackage = await createEventPackage(
+        cleanData,
+        labels,
+        mediaFile,
+        {
+          createdBy,
+          source: 'web'
+        }
+      );
+      
+      await downloadEventPackage(eventPackage);
+      toast.success(t('draftSaved'));
     } catch (error) {
       console.error('Error saving draft:', error);
-      toast.error(error instanceof Error ? error.message : t('draftSaveError'), {
-        position: 'top-center'
-      });
+      toast.error(t('saveError'));
     }
-  };
+  }, [formData, mediaFile, labels, createdBy, t]);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 p-4 max-w-2xl mx-auto">
+    <form onSubmit={handleSubmit} className="space-y-6 p-6 bg-white rounded-lg shadow-lg max-w-3xl mx-auto">
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">{t('newEvent')}</h2>
+      
+{/* Dynamic Form Fields from Labels */}
       <div className="space-y-4">
-        {/* Description Field */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            {t('description')}
-          </label>
-          <textarea
-            name="description"
-            value={(formData.description as string) || ''}
-            onChange={handleChange}
-            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[100px]"
-            placeholder={t('enterDescription')}
-          />
-        </div>
-
-        {/* Priority Field */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            {t('priority')} <span className="text-red-500">*</span>
-          </label>
-          <select
-            name="priority"
-            value={(formData.priority as string) || ''}
-            onChange={handleChange}
-            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            required
-          >
-            <option value="">{t('selectPriority')}</option>
-            <option value="low">{t('priorityLow')}</option>
-            <option value="medium">{t('priorityMedium')}</option>
-            <option value="high">{t('priorityHigh')}</option>
-          </select>
-          {errors.priority && <p className="mt-1 text-sm text-red-600">{errors.priority}</p>}
-        </div>
-
-        {/* Dynamic Fields from Labels (excluding date and media) */}
         {labels
-          .filter((label): label is Label => 
-            label.type !== 'media' && label.type !== 'date'
-          )
-          .map(label => {
+          .filter(label => !['media', 'date'].includes(label.type))
+          .map((label) => {
             const labelName = i18n.language === 'fr' ? label.name_fr : label.name_en;
+            const labelId = `field-${label.labelId}`;
             const error = errors[label.labelId];
-            
-            const renderField = () => {
-              // For enum type, render a select element
-              if (label.type === 'enum') {
-                return (
-                  <select
+
+            return (
+              <div key={label.labelId} className="space-y-2">
+                <label htmlFor={labelId} className="block text-sm font-medium text-gray-700">
+                  {labelName} {label.required && <span className="text-red-500">*</span>}
+                </label>
+                
+                {label.type === 'text' && (
+                  <input
+                    type="text"
+                    id={labelId}
                     name={label.labelId}
-                    value={(formData[label.labelId] as string) || ''}
+                    value={String(formData[label.labelId] || '')}
                     onChange={handleChange}
-                    className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+                    disabled={isSubmitting}
                     required={label.required}
+                    placeholder={getLocalizedText(label.placeholder)}
+                  />
+                )}
+                
+                {label.type === 'number' && (
+                  <input
+                    type="number"
+                    id={labelId}
+                    name={label.labelId}
+                    value={Number(formData[label.labelId] || 0)}
+                    onChange={handleChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+                    min={label.constraints?.min}
+                    max={label.constraints?.max}
+                    step={label.constraints?.step}
+                    disabled={isSubmitting}
+                    required={label.required}
+                    placeholder={getLocalizedText(label.placeholder)}
+                  />
+                )}
+                
+                {label.type === 'boolean' && (
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id={labelId}
+                      name={label.labelId}
+                      checked={!!formData[label.labelId]}
+                      onChange={handleChange}
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      disabled={isSubmitting}
+                    />
+                  </div>
+                )}
+                
+                {label.type === 'enum' && label.options && (
+                  <select
+                    id={labelId}
+                    name={label.labelId}
+                    value={formData[label.labelId] as string || ''}
+                    onChange={handleChange}
+                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                    disabled={isSubmitting}
                   >
                     <option value="">{t('selectOption')}</option>
-                    {label.options?.map((option: string) => (
+                    {label.options?.map(option => (
                       <option key={option} value={option}>
                         {option}
                       </option>
                     ))}
                   </select>
-                );
-              }
-              
-              // For boolean type, render a checkbox
-              if (label.type === 'boolean') {
-                return (
-                  <input
-                    type="checkbox"
-                    name={label.labelId}
-                    checked={!!formData[label.labelId]}
-                    onChange={handleChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    required={label.required}
-                  />
-                );
-              }
-              
-              // For text and number types, render appropriate input
-              return (
-                <input
-                  type={label.type}
-                  name={label.labelId}
-                  value={(formData[label.labelId] as string) || ''}
-                  onChange={handleChange}
-                  className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required={label.required}
-                  min={label.type === 'number' ? label.constraints?.min : undefined}
-                  max={label.type === 'number' ? label.constraints?.max : undefined}
-                  maxLength={label.type === 'text' ? label.constraints?.maxLength : undefined}
-                />
-              );
-            };
-            
-            return (
-              <div key={label.labelId} className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {labelName}
-                  {label.required && <span className="text-red-500">*</span>}
-                </label>
-                {renderField()}
+                )}
+                
                 {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+                {label.helpText && (
+                  <p className="mt-1 text-xs text-gray-500">
+                    {getLocalizedText(label.helpText)}
+                  </p>
+                )}
               </div>
             );
           })}
       </div>
-
-      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-        {renderMediaSection()}
-        {errors.media && (
-          <p className="mt-2 text-sm text-red-600">{errors.media}</p>
-        )}
+      
+      {/* Media Upload Section */}
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">
+          {t('addMedia')} <span className="text-red-500">*</span>
+        </label>
+        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+          {renderMediaSection()}
+          {errors.media && <p className="mt-2 text-sm text-red-600">{errors.media}</p>}
+        </div>
       </div>
 
-      <div className="mt-6 flex justify-between">
+      <div className="flex justify-end space-x-4 mt-8">
         <button
           type="button"
           onClick={handleSaveDraft}
-          disabled={isSubmitting}
-          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+          disabled={isSubmitting || !mediaFile}
+          className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Save className="inline mr-2" size={16} />
-          {t('saveDraft')}
+          <Save className="h-4 w-4 mr-2" />
+          {t('save')}
         </button>
-        
         <button
           type="submit"
-          disabled={isSubmitting}
-          className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+          disabled={isSubmitting || !mediaFile}
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Send className="inline mr-2" size={16} />
-          {isSubmitting ? t('submitting') : t('submit')}
+          {isSubmitting ? (
+            <>
+              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              {t('saving')}
+            </>
+          ) : (
+            <>
+              <Send className="h-4 w-4 mr-2" />
+              {t('submit')}
+            </>
+          )}
         </button>
       </div>
     </form>
