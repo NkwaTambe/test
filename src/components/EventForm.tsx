@@ -2,15 +2,16 @@ import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Camera, Upload, Send, Save } from 'lucide-react';
 import { toast } from 'sonner';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import CameraCapture from './CameraCapture';
 import type { Label, LocalizedText } from '../labels/label-manager';
 import { createEventPackage, validateFormData } from '../utils/event-packer';
-import { downloadEventPackage } from '../utils/zip-exporter';
+import { exportEventPackageAsZip, downloadEventPackage } from '../utils/zip-exporter';
 import type { KeyPair } from '../hooks/useKeyInitialization';
 
 type FieldValue = string | number | boolean | null;
 
-interface FormData extends Record<string, FieldValue> {}
+interface FormData extends Record<string, FieldValue> { }
 
 // Helper to get localized text from a string or LocalizedText object
 const getLocalizedText = (text: string | LocalizedText | undefined): string => {
@@ -36,9 +37,7 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, type } = e.target;
     const target = e.target as HTMLInputElement;
-    
     let value: FieldValue;
-    
     if (type === 'checkbox') {
       value = target.checked;
     } else if (type === 'number') {
@@ -46,7 +45,7 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
     } else {
       value = target.value === '' ? null : target.value;
     }
-    
+
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -85,8 +84,8 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
     if (cameraActive) {
       return (
         <div className="w-full">
-          <CameraCapture 
-            onCapture={handleImageCapture} 
+          <CameraCapture
+            onCapture={handleImageCapture}
             onError={handleCameraError}
             disabled={isSubmitting}
             className="w-full"
@@ -98,9 +97,9 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
     if (mediaFile) {
       return (
         <div className="relative">
-          <img 
-            src={URL.createObjectURL(mediaFile)} 
-            alt="Preview" 
+          <img
+            src={URL.createObjectURL(mediaFile)}
+            alt="Preview"
             className="max-h-64 mx-auto mb-4 rounded"
           />
           <button
@@ -146,23 +145,16 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
   const validate = useCallback((): boolean => {
     // Create a clean data object with only the fields that match our labels
     const cleanData: Record<string, FieldValue> = {};
-    
     labels.forEach(label => {
       if (formData[label.labelId] !== undefined) {
         cleanData[label.labelId] = formData[label.labelId];
       }
     });
-    
-
-    
     const { isValid: isFormDataValid, errors: formErrors } = validateFormData(cleanData, labels);
-    
     const newErrors: Record<string, string> = { ...formErrors };
-    
     if (!mediaFile) {
       newErrors.media = t('mediaRequired');
     }
-    
     setErrors(newErrors);
     return isFormDataValid && Object.keys(newErrors).length === 0;
   }, [formData, labels, mediaFile, t]);
@@ -170,22 +162,16 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-    
     setIsSubmitting(true);
     try {
       if (!mediaFile) throw new Error(t('mediaRequired'));
-      
       // Create a clean data object with only the fields that match our labels
       const cleanData: Record<string, FieldValue> = {};
-      
       labels.forEach(label => {
         if (formData[label.labelId] !== undefined) {
           cleanData[label.labelId] = formData[label.labelId];
         }
       });
-      
-
-      
       const eventPackage = await createEventPackage(
         cleanData,
         labels,
@@ -195,12 +181,43 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
           source: 'web'
         }
       );
-      
-      await downloadEventPackage(eventPackage);
-      
+
+      // Debug: Log AWS env variables
+      console.log('region', import.meta.env.VITE_AWS_REGION);
+      console.log('accessKeyId', import.meta.env.VITE_AWS_ACCESS_KEY_ID);
+      console.log('secretAccessKey', import.meta.env.VITE_AWS_SECRET_ACCESS_KEY);
+      console.log('bucket', import.meta.env.VITE_S3_BUCKET_NAME);
+
+      // Check for missing env vars
+      if (!import.meta.env.VITE_AWS_REGION || !import.meta.env.VITE_AWS_ACCESS_KEY_ID || !import.meta.env.VITE_AWS_SECRET_ACCESS_KEY || !import.meta.env.VITE_S3_BUCKET_NAME) {
+        toast.error('AWS configuration is missing. Please check your .env.local file and restart the dev server.');
+        throw new Error('Missing AWS configuration');
+      }
+
+      // S3 Upload Logic
+      const s3Client = new S3Client({
+        region: import.meta.env.VITE_AWS_REGION,
+        credentials: {
+          accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID,
+          secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY,
+        },
+      });
+
+      const zipBlob = await exportEventPackageAsZip(eventPackage);
+      const zipArrayBuffer = await zipBlob.arrayBuffer();
+
+      const uploadParams = {
+        Bucket: import.meta.env.VITE_S3_BUCKET_NAME,
+        Key: `event-${Date.now()}.zip`,
+        Body: zipArrayBuffer,
+        ContentType: 'application/zip',
+      };
+
+      await s3Client.send(new PutObjectCommand(uploadParams));
+
       setFormData({});
       setMediaFile(null);
-      
+
       toast.success(t('eventSaved'));
     } catch (error) {
       console.error('Error saving event:', error);
@@ -214,18 +231,18 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
   const handleSaveDraft = useCallback(async () => {
     try {
       if (!mediaFile) throw new Error(t('mediaRequired'));
-      
+
       const cleanData: Record<string, FieldValue> = {};
-      
+
       labels.forEach(label => {
         if (formData[label.labelId] !== undefined) {
           cleanData[label.labelId] = formData[label.labelId];
         }
       });
-      
+
       cleanData.description = formData.description || null;
       cleanData.priority = formData.priority || 'medium';
-      
+
       const eventPackage = await createEventPackage(
         cleanData,
         labels,
@@ -235,7 +252,7 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
           source: 'web'
         }
       );
-      
+
       await downloadEventPackage(eventPackage);
       toast.success(t('draftSaved'));
     } catch (error) {
@@ -247,11 +264,11 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-6 p-6 bg-white rounded-lg shadow-lg max-w-3xl mx-auto">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">{t('newEvent')}</h2>
-      
-{/* Dynamic Form Fields from Labels */}
+
+      {/* Dynamic Form Fields from Labels */}
       <div className="space-y-4">
         {labels
-          .filter(label => !['media', 'date'].includes(label.type))
+          .filter(label => label.type !== 'media')
           .map((label) => {
             const labelName = i18n.language === 'fr' ? label.name_fr : label.name_en;
             const labelId = `field-${label.labelId}`;
@@ -262,7 +279,22 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
                 <label htmlFor={labelId} className="block text-sm font-medium text-gray-700">
                   {labelName} {label.required && <span className="text-red-500">*</span>}
                 </label>
-                
+
+                {/* Date Field */}
+                {label.type === 'date' && (
+                  <input
+                    type="date"
+                    id={labelId}
+                    name={label.labelId}
+                    value={formData[label.labelId] as string || ''}
+                    onChange={handleChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+                    disabled={isSubmitting}
+                    required={label.required}
+                  />
+                )}
+
+                {/* Text Field */}
                 {label.type === 'text' && (
                   <input
                     type="text"
@@ -276,7 +308,8 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
                     placeholder={getLocalizedText(label.placeholder)}
                   />
                 )}
-                
+
+                {/* Number Field */}
                 {label.type === 'number' && (
                   <input
                     type="number"
@@ -293,7 +326,8 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
                     placeholder={getLocalizedText(label.placeholder)}
                   />
                 )}
-                
+
+                {/* Boolean Field */}
                 {label.type === 'boolean' && (
                   <div className="flex items-center">
                     <input
@@ -307,7 +341,8 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
                     />
                   </div>
                 )}
-                
+
+                {/* Enum Field */}
                 {label.type === 'enum' && label.options && (
                   <select
                     id={labelId}
@@ -325,7 +360,7 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
                     ))}
                   </select>
                 )}
-                
+
                 {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
                 {label.helpText && (
                   <p className="mt-1 text-xs text-gray-500">
@@ -336,7 +371,7 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
             );
           })}
       </div>
-      
+
       {/* Media Upload Section */}
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-700">
@@ -374,7 +409,7 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
           ) : (
             <>
               <Send className="h-4 w-4 mr-2" />
-              {t('submit')}
+              {t('')}
             </>
           )}
         </button>

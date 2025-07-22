@@ -44,7 +44,7 @@ export async function fetchLabels(): Promise<Label[]> {
           name_en: 'Event Date', 
           name_fr: 'Date de l\'événement', 
           type: 'date', 
-          required: true 
+          required: true
         },
         { 
           labelId: '3', 
