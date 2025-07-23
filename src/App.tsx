@@ -7,8 +7,6 @@ import { useLabelManagement } from "./hooks/useLabelManagement";
 import useKeyInitialization from "./hooks/useKeyInitialization";
 import EventForm from "./components/EventForm";
 import WelcomeScreen from "./components/WelcomeScreen";
-import CategorySelectionPage from "./pages/CategorySelectionPage";
-
 // Loading spinner component
 const LoadingSpinner = ({ message }: { message: string }) => (
   <div className="min-h-screen bg-primary-100 flex items-center justify-center font-[Inter] antialiased">
@@ -98,18 +96,8 @@ const App = memo(() => {
               path="/"
               element={
                 <WelcomeScreen
-                  onGetStarted={() => navigate("/select-category")}
+                  onGetStarted={() => navigate("/event-form/general")}
                   i18n={i18n}
-                />
-              }
-            />
-            <Route
-              path="/select-category"
-              element={
-                <CategorySelectionPage
-                  onSelectCategory={(category) =>
-                    navigate(`/event-form/${category}`)
-                  }
                 />
               }
             />
