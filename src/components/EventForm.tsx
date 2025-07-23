@@ -127,14 +127,6 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
         },
       );
 
-      // Debug: Log AWS env variables
-      console.log("region", import.meta.env.VITE_AWS_REGION);
-      console.log("accessKeyId", import.meta.env.VITE_AWS_ACCESS_KEY_ID);
-      console.log(
-        "secretAccessKey",
-        import.meta.env.VITE_AWS_SECRET_ACCESS_KEY,
-      );
-      console.log("bucket", import.meta.env.VITE_S3_BUCKET_NAME);
 
       // Check for missing env vars
       if (
