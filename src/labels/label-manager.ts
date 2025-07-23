@@ -39,12 +39,12 @@ export async function fetchLabels(): Promise<Label[]> {
           required: true,
           constraints: { maxLength: 35 },
         },
-        {
-          labelId: "2",
-          name_en: "Event Date",
-          name_fr: "Date de l'événement",
-          type: "date",
-          required: true,
+        { 
+          labelId: '2', 
+          name_en: 'Event Date', 
+          name_fr: 'Date de l\'événement', 
+          type: 'date', 
+          required: true
         },
         {
           labelId: "3",

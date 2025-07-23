@@ -21,6 +21,7 @@
   "knownRelays": "Relais connus",
   "noLabelsLoaded": "Aucune étiquette chargée pour l'instant.",
   "createNewEvent": "Créer un nouvel événement",
+  "newEventFor": "Nouvel événement {{category}}",
   "mediaCapture": "Prendre une photo",
   "cameraAccessError": "Impossible d'accéder à l'appareil photo. Veuillez vérifier les autorisations et réessayer.",
   "invalidImageFile": "Veuillez sélectionner un fichier image valide.",
@@ -44,5 +45,7 @@
   "welcomeTitle": "Bienvenue sur EventApp !",
   "welcomeDescription": "Votre plateforme décentralisée pour signaler les événements de manière sécurisée et efficace.",
   "getStartedButton": "Commencer",
-  "welcomeMoreInfo": "Cliquez sur 'Commencer' pour commencer à signaler des événements."
+  "welcomeMoreInfo": "Cliquez sur 'Commencer' pour commencer à signaler des événements.",
+  "selectCategoryTitle": "Choisissez une catégorie d'événement",
+  "selectCategoryDescription": "Sélectionnez la catégorie qui décrit le mieux l'événement que vous souhaitez signaler."
 }
