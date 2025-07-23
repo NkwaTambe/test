@@ -7,7 +7,7 @@ export interface Label {
   labelId: string;
   name_en: string;
   name_fr: string;
-  type: "date" | "text" | "number" | "enum" | "media" | "boolean";
+  type: "text" | "number" | "enum" | "boolean";
   required: boolean;
   placeholder?: string | LocalizedText;
   helpText?: string | LocalizedText;
@@ -40,13 +40,6 @@ export async function fetchLabels(): Promise<Label[]> {
           constraints: { maxLength: 35 },
         },
         {
-          labelId: "2",
-          name_en: "Event Date",
-          name_fr: "Date de l'événement",
-          type: "date",
-          required: true,
-        },
-        {
           labelId: "3",
           name_en: "Category",
           name_fr: "Catégorie",
@@ -69,13 +62,6 @@ export async function fetchLabels(): Promise<Label[]> {
           type: "enum",
           required: true,
           options: ["low", "medium", "high"],
-        },
-        {
-          labelId: "6",
-          name_en: "Photo",
-          name_fr: "Photo",
-          type: "media",
-          required: false,
         },
       ];
       console.log("Labels received:", labels);

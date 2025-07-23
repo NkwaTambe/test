@@ -65,6 +65,13 @@ export async function createEventPackage(
     };
   });
 
+  // separate annotation for the creation timestamp
+  annotations.push({
+    labelId: "createdAt",
+    value: now,
+    timestamp: now,
+  });
+
   // Process media file if provided
   let media: EventMedia | undefined;
   if (mediaFile) {

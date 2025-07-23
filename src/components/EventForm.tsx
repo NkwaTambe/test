@@ -272,114 +272,98 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
 
       {/* Dynamic Form Fields from Labels */}
       <div className="space-y-4">
-        {labels
-          .filter((label) => label.type !== "media")
-          .map((label) => {
-            const labelName =
-              i18n.language === "fr" ? label.name_fr : label.name_en;
-            const labelId = `field-${label.labelId}`;
-            const error = errors[label.labelId];
+        {labels.map((label) => {
+          const labelName =
+            i18n.language === "fr" ? label.name_fr : label.name_en;
+          const labelId = `field-${label.labelId}`;
+          const error = errors[label.labelId];
 
-            return (
-              <div key={label.labelId} className="space-y-2">
-                <label
-                  htmlFor={labelId}
-                  className="block text-sm font-medium text-gray-700"
+          return (
+            <div key={label.labelId} className="space-y-2">
+              <label
+                htmlFor={labelId}
+                className="block text-sm font-medium text-gray-700"
+              >
+                {labelName}{" "}
+                {label.required && <span className="text-red-500">*</span>}
+              </label>
+
+              {/* Text Field */}
+              {label.type === "text" && (
+                <input
+                  type="text"
+                  id={labelId}
+                  name={label.labelId}
+                  value={String(formData[label.labelId] || "")}
+                  onChange={handleChange}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+                  disabled={isSubmitting}
+                  required={label.required}
+                  placeholder={getLocalizedText(label.placeholder)}
+                />
+              )}
+
+              {/* Number Field */}
+              {label.type === "number" && (
+                <input
+                  type="number"
+                  id={labelId}
+                  name={label.labelId}
+                  value={Number(formData[label.labelId] || 0)}
+                  onChange={handleChange}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+                  min={label.constraints?.min}
+                  max={label.constraints?.max}
+                  step={label.constraints?.step}
+                  disabled={isSubmitting}
+                  required={label.required}
+                  placeholder={getLocalizedText(label.placeholder)}
+                />
+              )}
+
+              {/* Boolean Field */}
+              {label.type === "boolean" && (
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id={labelId}
+                    name={label.labelId}
+                    checked={!!formData[label.labelId]}
+                    onChange={handleChange}
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    disabled={isSubmitting}
+                  />
+                </div>
+              )}
+
+              {/* Enum Field */}
+              {label.type === "enum" && label.options && (
+                <select
+                  id={labelId}
+                  name={label.labelId}
+                  value={(formData[label.labelId] as string) || ""}
+                  onChange={handleChange}
+                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                  disabled={isSubmitting}
                 >
-                  {labelName}{" "}
-                  {label.required && <span className="text-red-500">*</span>}
-                </label>
+                  <option value="">{t("select option")}</option>
+                  {label.options?.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              )}
 
-                {/* Date Field */}
-                {label.type === "date" && (
-                  <input
-                    type="date"
-                    id={labelId}
-                    name={label.labelId}
-                    value={(formData[label.labelId] as string) || ""}
-                    onChange={handleChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
-                    disabled={isSubmitting}
-                    required={label.required}
-                  />
-                )}
-
-                {/* Text Field */}
-                {label.type === "text" && (
-                  <input
-                    type="text"
-                    id={labelId}
-                    name={label.labelId}
-                    value={String(formData[label.labelId] || "")}
-                    onChange={handleChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
-                    disabled={isSubmitting}
-                    required={label.required}
-                    placeholder={getLocalizedText(label.placeholder)}
-                  />
-                )}
-
-                {/* Number Field */}
-                {label.type === "number" && (
-                  <input
-                    type="number"
-                    id={labelId}
-                    name={label.labelId}
-                    value={Number(formData[label.labelId] || 0)}
-                    onChange={handleChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
-                    min={label.constraints?.min}
-                    max={label.constraints?.max}
-                    step={label.constraints?.step}
-                    disabled={isSubmitting}
-                    required={label.required}
-                    placeholder={getLocalizedText(label.placeholder)}
-                  />
-                )}
-
-                {/* Boolean Field */}
-                {label.type === "boolean" && (
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id={labelId}
-                      name={label.labelId}
-                      checked={!!formData[label.labelId]}
-                      onChange={handleChange}
-                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      disabled={isSubmitting}
-                    />
-                  </div>
-                )}
-
-                {/* Enum Field */}
-                {label.type === "enum" && label.options && (
-                  <select
-                    id={labelId}
-                    name={label.labelId}
-                    value={(formData[label.labelId] as string) || ""}
-                    onChange={handleChange}
-                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                    disabled={isSubmitting}
-                  >
-                    <option value="">{t("select option")}</option>
-                    {label.options?.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                )}
-
-                {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
-                {label.helpText && (
-                  <p className="mt-1 text-xs text-gray-500">
-                    {getLocalizedText(label.helpText)}
-                  </p>
-                )}
-              </div>
-            );
-          })}
+              {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+              {label.helpText && (
+                <p className="mt-1 text-xs text-gray-500">
+                  {getLocalizedText(label.helpText)}
+                </p>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* Media Upload Section */}
