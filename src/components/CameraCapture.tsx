@@ -49,7 +49,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
-  const [isCameraLoading, setIsCameraLoading] = useState(false);
+  const [, setIsCameraLoading] = useState(false);
 
   // Start Camera
   const startCamera = useCallback(async () => {
