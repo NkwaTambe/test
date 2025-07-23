@@ -1,13 +1,13 @@
-import { memo, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Toaster } from 'sonner';
-import { Languages } from 'lucide-react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
-import { useLabelManagement } from './hooks/useLabelManagement';
-import useKeyInitialization from './hooks/useKeyInitialization';
-import EventForm from './components/EventForm';
-import WelcomeScreen from './components/WelcomeScreen';
-import CategorySelectionPage from './pages/CategorySelectionPage';
+import { memo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
+import { Toaster } from "sonner";
+import { Languages } from "lucide-react";
+import { Routes, Route, useNavigate } from "react-router-dom";
+import { useLabelManagement } from "./hooks/useLabelManagement";
+import useKeyInitialization from "./hooks/useKeyInitialization";
+import EventForm from "./components/EventForm";
+import WelcomeScreen from "./components/WelcomeScreen";
+import CategorySelectionPage from "./pages/CategorySelectionPage";
 
 // Loading spinner component
 const LoadingSpinner = ({ message }: { message: string }) => (
@@ -22,7 +22,7 @@ const LoadingSpinner = ({ message }: { message: string }) => (
 // Error display component
 const ErrorDisplay = ({
   error,
-  onRetry
+  onRetry,
 }: {
   error: Error;
   onRetry: () => void;
@@ -53,7 +53,7 @@ const App = memo(() => {
   const handleRetry = useCallback(() => window.location.reload(), []);
 
   const toggleLanguage = () => {
-    const newLang = i18n.language === 'en' ? 'fr' : 'en';
+    const newLang = i18n.language === "en" ? "fr" : "en";
     i18n.changeLanguage(newLang);
   };
 
@@ -94,9 +94,29 @@ const App = memo(() => {
         </header>
         <main>
           <Routes>
-            <Route path="/" element={<WelcomeScreen onGetStarted={() => navigate('/select-category')} i18n={i18n} />} />
-            <Route path="/select-category" element={<CategorySelectionPage onSelectCategory={(category) => navigate(`/event-form/${category}`)} />} />
-            <Route path="/event-form/:category" element={<EventForm labels={labels} keyPair={keyPair} />} />
+            <Route
+              path="/"
+              element={
+                <WelcomeScreen
+                  onGetStarted={() => navigate("/select-category")}
+                  i18n={i18n}
+                />
+              }
+            />
+            <Route
+              path="/select-category"
+              element={
+                <CategorySelectionPage
+                  onSelectCategory={(category) =>
+                    navigate(`/event-form/${category}`)
+                  }
+                />
+              }
+            />
+            <Route
+              path="/event-form/:category"
+              element={<EventForm labels={labels} keyPair={keyPair} />}
+            />
           </Routes>
         </main>
       </div>

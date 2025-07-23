@@ -2,7 +2,7 @@ import React from "react";
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 import type { i18n as I18nInstance } from "i18next";
-import { Sparkles } from 'lucide-react';
+import { Sparkles } from "lucide-react";
 
 interface WelcomeScreenProps {
   onGetStarted: () => void;
@@ -53,7 +53,9 @@ const WelcomeScreen: FC<WelcomeScreenProps> = ({ onGetStarted, i18n }) => {
             Français
           </button>
         </div>
-        <p className="text-gray-700 text-base mb-8 italic">{t("welcomeMoreInfo")}</p>
+        <p className="text-gray-700 text-base mb-8 italic">
+          {t("welcomeMoreInfo")}
+        </p>
         <button
           onClick={onGetStarted}
           className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white text-xl font-bold px-10 py-4 rounded-full shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75"
