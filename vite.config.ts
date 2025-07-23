@@ -10,19 +10,19 @@ export default defineConfig({
       registerType: "autoUpdate",
       manifest: {
         name: "ReportHub",
-        short_name: "EventRecorder",
+        short_name: "ReportHub",
         start_url: "/",
         display: "standalone",
         background_color: "#ffffff",
         theme_color: "#007bff",
         icons: [
           {
-            src: "/download1.png",
+            src: "/test//download1.png",
             sizes: "192x192",
             type: "image/png",
           },
           {
-            src: "/download2.png",
+            src: "/test/download2.png",
             sizes: "512x512",
             type: "image/png",
           },
