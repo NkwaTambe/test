@@ -1,4 +1,3 @@
-
 /**
  * CameraCapture component allows users to capture an image using their device's camera
  * or select an image from their gallery. It provides a preview of the captured or selected image,
@@ -44,7 +43,6 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
   // Refs
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
   // State
@@ -117,41 +115,16 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
     }, 'image/jpeg', 0.9);
   }, [disabled, onCapture, stopCamera]);
 
-  // Handle File Upload
-  const handleFileChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (disabled) return;
-
-      const file = e.target.files?.[0];
-      if (!file) return;
-
-      if (!file.type.startsWith('image/')) {
-        const error = new Error('Selected file is not an image');
-        setCameraError(t('invalidImageFile'));
-        onError?.(error);
-        return;
-      }
-
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-      onCapture(file);
-    },
-    [disabled, onCapture, onError, t]
-  );
-
   // Cleanup
   useEffect(() => {
+    if (!previewUrl) {
+      startCamera();
+    }
     return () => {
       stopCamera();
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
-  }, [previewUrl, stopCamera]);
-
-  // Reset Preview
-  const resetPreview = useCallback(() => {
-    setPreviewUrl(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  }, []);
+  }, [previewUrl, startCamera, stopCamera]);
 
   return (
     <div className={className}>
@@ -175,7 +148,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
             <img src={previewUrl} alt="Captured preview" className="w-full h-full object-cover rounded-lg" />
             <button
               type="button"
-              onClick={resetPreview}
+              onClick={() => setPreviewUrl(null)}
               className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
               aria-label={t('removeImage')}
             >
@@ -185,26 +158,6 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
             </button>
           </div>
         )}
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row justify-center gap-3 mt-2">
-        <button
-          type="button"
-          onClick={startCamera}
-          disabled={disabled || isCameraLoading}
-          className="w-full bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-full shadow transition duration-300 flex items-center justify-center gap-2"
-        >
-          {t('openCamera')}
-        </button>
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={disabled}
-          className="w-full bg-gray-700 hover:bg-gray-800 text-white text-sm font-medium px-4 py-2 rounded-full shadow transition duration-300 flex items-center justify-center gap-2"
-        >
-          {t('chooseFromGallery')}
-        </button>
       </div>
 
       {/* Capture Controls */}
@@ -236,14 +189,6 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
       {cameraError && <div className="text-red-500 text-sm mt-2">{cameraError}</div>}
 
       {/* Hidden Inputs */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleFileChange}
-        capture="environment"
-      />
       <canvas ref={canvasRef} className="hidden" />
     </div>
   );

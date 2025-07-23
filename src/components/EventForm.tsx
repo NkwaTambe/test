@@ -1,9 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback} from 'react';
 import { useTranslation } from 'react-i18next';
+import { useParams } from 'react-router-dom';
 import { Camera, Upload, Send, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import CameraCapture from './CameraCapture';
 import type { Label, LocalizedText } from '../labels/label-manager';
 import { createEventPackage, validateFormData } from '../utils/event-packer';
 import { exportEventPackageAsZip, downloadEventPackage } from '../utils/zip-exporter';
@@ -22,15 +22,18 @@ const getLocalizedText = (text: string | LocalizedText | undefined): string => {
 
 interface EventFormProps {
   labels: Label[];
-  keyPair?: KeyPair; // Made optional since it's not used
+  keyPair?: KeyPair;
   createdBy?: string;
 }
 
 const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
   const { t, i18n } = useTranslation();
-  const [formData, setFormData] = useState<FormData>({});
+  const { category } = useParams<{ category: string }>();
+  const [formData, setFormData] = useState<FormData>({
+    '3': category || '', // Pre-fill category from URL params
+  });
   const [mediaFile, setMediaFile] = useState<File | null>(null);
-  const [cameraActive, setCameraActive] = useState(false);
+  // Remove cameraActive and CameraCapture logic
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -66,81 +69,16 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
     }
   };
 
-  const toggleCamera = () => setCameraActive(prev => !prev);
-
-  const handleImageCapture = (imageFile: File) => {
-    setMediaFile(imageFile);
-    setCameraActive(false);
-    setErrors(prev => ({ ...prev, media: '' }));
-  };
-
-  const handleCameraError = (error: Error) => {
-    console.error('Camera error:', error);
-    setCameraActive(false);
-    toast.error(t('cameraError'));
-  };
-
-  const renderMediaSection = () => {
-    if (cameraActive) {
-      return (
-        <div className="w-full">
-          <CameraCapture
-            onCapture={handleImageCapture}
-            onError={handleCameraError}
-            disabled={isSubmitting}
-            className="w-full"
-          />
-        </div>
-      );
+  // Replace renderMediaSection with a direct file input for camera capture
+  const handlePhotoInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) {
+      setMediaFile(e.target.files[0]);
+      setErrors(prev => ({ ...prev, media: '' }));
     }
-
-    if (mediaFile) {
-      return (
-        <div className="relative">
-          <img
-            src={URL.createObjectURL(mediaFile)}
-            alt="Preview"
-            className="max-h-64 mx-auto mb-4 rounded"
-          />
-          <button
-            type="button"
-            onClick={() => setMediaFile(null)}
-            className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-          >
-            &times;
-          </button>
-        </div>
-      );
-    }
-
-    return (
-      <div>
-        <div className="flex justify-center space-x-4 mb-4">
-          <label className="cursor-pointer bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-            <Upload className="inline mr-2" size={16} />
-            {t('uploadMedia')}
-            <input
-              type="file"
-              accept="image/*,video/*"
-              className="hidden"
-              onChange={handleFileChange}
-            />
-          </label>
-          <button
-            type="button"
-            onClick={toggleCamera}
-            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 flex items-center"
-          >
-            <Camera className="mr-2" size={16} />
-            {t('takePhoto')}
-          </button>
-        </div>
-        <p className="text-sm text-gray-500">
-          {t('orDragAndDrop')}
-        </p>
-      </div>
-    );
   };
+
+
+
 
   const validate = useCallback((): boolean => {
     // Create a clean data object with only the fields that match our labels
@@ -261,9 +199,12 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
     }
   }, [formData, mediaFile, labels, createdBy, t]);
 
+  const categoryLabel = labels.find(label => label.labelId === '3');
+  const categoryName = categoryLabel ? (i18n.language === 'fr' ? categoryLabel.name_fr : categoryLabel.name_en) : '';
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6 p-6 bg-white rounded-lg shadow-lg max-w-3xl mx-auto">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">{t('newEvent')}</h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">{t('newEventFor', { category: categoryName })}</h2>
 
       {/* Dynamic Form Fields from Labels */}
       <div className="space-y-4">
@@ -273,6 +214,29 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
             const labelName = i18n.language === 'fr' ? label.name_fr : label.name_en;
             const labelId = `field-${label.labelId}`;
             const error = errors[label.labelId];
+
+            // Use textarea for description
+            if (label.labelId === '4' && label.type === 'text') {
+              return (
+                <div key={label.labelId} className="mb-4">
+                  <label htmlFor={labelId} className="block text-sm font-medium text-gray-700 mb-1">
+                    {labelName} {label.required && <span className="text-red-500">*</span>}
+                  </label>
+                  <textarea
+                    id={labelId}
+                    name={label.labelId}
+                    value={formData[label.labelId] as string || ''}
+                    onChange={handleChange}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[100px] resize-y"
+                    disabled={isSubmitting}
+                    required={label.required}
+                    placeholder="Describe the event..."
+                  />
+                  {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+                  {label.helpText && <p className="mt-1 text-xs text-gray-500">{getLocalizedText(label.helpText)}</p>}
+                </div>
+              );
+            }
 
             return (
               <div key={label.labelId} className="space-y-2">
@@ -349,7 +313,7 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
                     name={label.labelId}
                     value={formData[label.labelId] as string || ''}
                     onChange={handleChange}
-                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                    className="mt-1 block w-full p-2 text-base border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
                     disabled={isSubmitting}
                   >
                     <option value="">{t('selectOption')}</option>
@@ -372,15 +336,63 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
           })}
       </div>
 
-      {/* Media Upload Section */}
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">
-          {t('addMedia')} <span className="text-red-500">*</span>
-        </label>
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-          {renderMediaSection()}
-          {errors.media && <p className="mt-2 text-sm text-red-600">{errors.media}</p>}
+      {/* Media Section - Camera, Upload, and Drag-and-Drop */}
+      <div className="mb-4">
+        <div className="flex justify-center space-x-4">
+          <label className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center cursor-pointer">
+            <Upload className="inline mr-2" size={16} />
+            {t('uploadMedia')}
+            <input
+              type="file"
+              accept="image/*,video/*"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+          </label>
+          <label className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 flex items-center cursor-pointer">
+            <Camera className="mr-2" size={16} />
+            {t('takePhoto')}
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={handlePhotoInput}
+            />
+          </label>
         </div>
+        {/* Drag-and-drop area for desktop */}
+        <div className="hidden md:block mt-4">
+          <div
+            className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-400"
+            onDrop={e => {
+              e.preventDefault();
+              if (e.dataTransfer.files?.[0]) {
+                setMediaFile(e.dataTransfer.files[0]);
+                setErrors(prev => ({ ...prev, media: '' }));
+              }
+            }}
+            onDragOver={e => e.preventDefault()}
+          >
+            <p className="text-sm text-gray-500">{t('orDragAndDrop')}</p>
+          </div>
+        </div>
+        {mediaFile && (
+          <div className="relative mt-4">
+            <img
+              src={URL.createObjectURL(mediaFile)}
+              alt="Preview"
+              className="max-h-64 mx-auto mb-4 rounded"
+            />
+            <button
+              type="button"
+              onClick={() => setMediaFile(null)}
+              className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+            >
+              &times;
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="flex justify-end space-x-4 mt-8">
@@ -409,7 +421,7 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
           ) : (
             <>
               <Send className="h-4 w-4 mr-2" />
-              {t('')}
+              {t('submit')}
             </>
           )}
         </button>

@@ -21,6 +21,7 @@
   "knownRelays": "Known Relays",
   "noLabelsLoaded": "No labels loaded yet.",
   "createNewEvent": "Create New Event",
+  "newEventFor": "New {{category}} Event",
   "mediaCapture": "Take a Photo",
   "cameraAccessError": "Could not access camera. Please check permissions and try again.",
   "invalidImageFile": "Please select a valid image file.",
@@ -44,5 +45,7 @@
   "welcomeTitle": "Welcome to EventApp!",
   "welcomeDescription": "Your decentralized platform for reporting events securely and efficiently.",
   "getStartedButton": "Get Started",
-  "welcomeMoreInfo": "Click 'Get Started' to begin reporting events."
+  "welcomeMoreInfo": "Click 'Get Started' to begin reporting events.",
+  "selectCategoryTitle": "Choose an Event Category",
+  "selectCategoryDescription": "Select the category that best describes the event you wish to report."
 }
