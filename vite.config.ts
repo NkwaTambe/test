@@ -12,6 +12,7 @@ export default defineConfig({
         name: "ReportHub",
         short_name: "ReportHub",
         start_url: "/",
+        scope: "./",
         display: "standalone",
         background_color: "#ffffff",
         theme_color: "#007bff",

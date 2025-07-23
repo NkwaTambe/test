@@ -127,7 +127,6 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
         },
       );
 
-
       // Check for missing env vars
       if (
         !import.meta.env.VITE_AWS_REGION ||
