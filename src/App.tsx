@@ -8,7 +8,6 @@ import useKeyInitialization from './hooks/useKeyInitialization';
 import EventForm from './components/EventForm';
 import WelcomeScreen from './components/WelcomeScreen';
 import CategorySelectionPage from './pages/CategorySelectionPage';
-import i18n from './i18n';
 
 // Loading spinner component
 const LoadingSpinner = ({ message }: { message: string }) => (
@@ -30,7 +29,9 @@ const ErrorDisplay = ({
 }) => (
   <div className="min-h-screen bg-primary-100 flex items-center justify-center font-[Inter] antialiased">
     <div className="backdrop-blur-md bg-white/30 border border-white/20 shadow-lg rounded-2xl px-6 py-8 max-w-md w-full">
-      <h2 className="text-lg font-medium text-gray-900 mb-2">Error Initializing Application</h2>
+      <h2 className="text-lg font-medium text-gray-900 mb-2">
+        Error Initializing Application
+      </h2>
       <p className="text-red-600 mb-4">{error.message}</p>
       <button
         onClick={onRetry}
@@ -86,8 +87,10 @@ const App = memo(() => {
           <Languages className="w-6 h-6" />
         </button>
         <header className="text-center mb-6">
-          <h1 className="text-xl font-semibold text-gray-800">{t('appTitle')}</h1>
-          <p className="text-sm text-gray-500">{t('appSubtitle')}</p>
+          <h1 className="text-xl font-semibold text-gray-800">
+            {t("appTitle")}
+          </h1>
+          <p className="text-sm text-gray-500">{t("appSubtitle")}</p>
         </header>
         <main>
           <Routes>
@@ -101,6 +104,6 @@ const App = memo(() => {
   );
 });
 
-App.displayName = 'App';
+App.displayName = "App";
 
 export default App;

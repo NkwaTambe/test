@@ -1,4 +1,4 @@
-import { sha256 } from 'js-sha256';
+import { sha256 } from "js-sha256";
 
 export interface PowChallenge {
   prefix: string;
@@ -7,15 +7,15 @@ export interface PowChallenge {
 
 // Mock function to get a PoW challenge from a relay
 export async function fetchPowChallenge(): Promise<PowChallenge> {
-  console.log('Fetching PoW challenge...');
+  console.log("Fetching PoW challenge...");
   // In a real implementation, this would be a network request to a relay.
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     setTimeout(() => {
       const challenge = {
-        prefix: 'eventapp',
+        prefix: "eventapp",
         difficulty: 10,
       };
-      console.log('PoW challenge received:', challenge);
+      console.log("PoW challenge received:", challenge);
       resolve(challenge);
     }, 1000);
   });
@@ -23,9 +23,9 @@ export async function fetchPowChallenge(): Promise<PowChallenge> {
 
 export function solvePow(challenge: PowChallenge): number {
   let nonce = 0;
-  const target = '0'.repeat(challenge.difficulty);
+  const target = "0".repeat(challenge.difficulty);
 
-  console.log('Solving PoW challenge...');
+  console.log("Solving PoW challenge...");
 
   while (true) {
     const data = `${challenge.prefix}:${nonce}`;
@@ -42,9 +42,9 @@ export function solvePow(challenge: PowChallenge): number {
 export async function submitPowSolution(nonce: number): Promise<boolean> {
   console.log(`Submitting PoW solution with nonce: ${nonce}`);
   // In a real implementation, this would be a network request to a relay.
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     setTimeout(() => {
-      console.log('PoW solution accepted.');
+      console.log("PoW solution accepted.");
       resolve(true);
     }, 1000);
   });

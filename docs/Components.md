@@ -23,10 +23,10 @@ The `CameraCapture.tsx` component provides functionality for capturing images us
 - **Image Preview:** Shows a preview of the captured or selected image.
 - **Error Handling:** Manages and displays errors related to camera access or invalid file types.
 - **Props:**
-    - `onCapture`: Callback function triggered when an image is successfully captured or selected.
-    - `onError`: Optional callback function for handling errors.
-    - `className`: Optional CSS classes for styling the component.
-    - `disabled`: Boolean to disable camera functionality.
+  - `onCapture`: Callback function triggered when an image is successfully captured or selected.
+  - `onError`: Optional callback function for handling errors.
+  - `className`: Optional CSS classes for styling the component.
+  - `disabled`: Boolean to disable camera functionality.
 
 ## 3. `EventForm.tsx`
 
@@ -38,8 +38,8 @@ The `EventForm.tsx` component is the main container for the event submission for
 - **Sharing Logic:** Implements `handleShareClick` to export the event package as a ZIP file.
 - **Delegation:** Renders `EventFormFields`, `EventFormMedia`, and `EventFormActions` components, passing necessary props and callbacks.
 - **Props:**
-    - `labels`: An array of `Label` objects defining the form fields.
-    - `keyPair`: The cryptographic key pair used for signing event submissions.
+  - `labels`: An array of `Label` objects defining the form fields.
+  - `keyPair`: The cryptographic key pair used for signing event submissions.
 
 ## 4. `EventFormActions.tsx`
 
@@ -49,9 +49,9 @@ The `EventFormActions.tsx` component is responsible for rendering the action but
 - **Share Button:** Provides a "Share as Zip" button to export the event data.
 - **State Management:** Receives `isSubmitting` prop to disable buttons during submission.
 - **Props:**
-    - `isSubmitting`: Boolean indicating if the form is currently submitting.
-    - `handleSubmit`: Callback function for form submission.
-    - `handleShareClick`: Callback function for sharing the event as a ZIP.
+  - `isSubmitting`: Boolean indicating if the form is currently submitting.
+  - `handleSubmit`: Callback function for form submission.
+  - `handleShareClick`: Callback function for sharing the event as a ZIP.
 
 ## 5. `EventFormFields.tsx`
 
@@ -61,13 +61,13 @@ The `EventFormFields.tsx` component dynamically renders the various input fields
 - **Input Handling:** Manages `handleChange` for updating form data.
 - **Validation Feedback:** Displays error messages for individual fields.
 - **Props:**
-    - `labels`: An array of `Label` objects defining the form fields.
-    - `formData`: The current state of the form data.
-    - `errors`: An object containing validation errors for each field.
-    - `handleChange`: Callback function to update form data.
-    - `i18n`: The i18next instance for internationalization.
-    - `t`: The translation function from i18next.
-    - `isSubmitting`: Boolean to disable fields during submission.
+  - `labels`: An array of `Label` objects defining the form fields.
+  - `formData`: The current state of the form data.
+  - `errors`: An object containing validation errors for each field.
+  - `handleChange`: Callback function to update form data.
+  - `i18n`: The i18next instance for internationalization.
+  - `t`: The translation function from i18next.
+  - `isSubmitting`: Boolean to disable fields during submission.
 
 ## 6. `EventFormMedia.tsx`
 
@@ -77,13 +77,10 @@ The `EventFormMedia.tsx` component handles the media capture section of the even
 - **Media Preview:** Displays a preview of the captured or selected media file.
 - **Feedback:** Shows success messages (file name and size) and error messages related to media capture.
 - **Props:**
-    - `mediaFile`: The currently selected media file.
-    - `handleMediaCapture`: Callback function for handling captured media.
-    - `handleMediaError`: Callback function for handling media capture errors.
-    - `errors`: An object containing validation errors, specifically for media.
-
-
-
+  - `mediaFile`: The currently selected media file.
+  - `handleMediaCapture`: Callback function for handling captured media.
+  - `handleMediaError`: Callback function for handling media capture errors.
+  - `errors`: An object containing validation errors, specifically for media.
 
 ```mermaid
 sequenceDiagram

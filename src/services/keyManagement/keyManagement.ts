@@ -1,7 +1,5 @@
 import checkKeyPairExists from "./checkKeyPairExists";
-import storeKeyPair, {
-  retrieveKeyPair,
-} from "./storeKey";
+import storeKeyPair, { retrieveKeyPair } from "./storeKey";
 
 export async function KeyManagement() {
   const keyPairExists = await checkKeyPairExists();

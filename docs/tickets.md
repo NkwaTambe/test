@@ -1,4 +1,3 @@
-
 ## 🗂️ MASTER ROADMAP STRUCTURE
 
 ### 📦 Main Components:
@@ -97,7 +96,5 @@
 | `INFRA-05` | 🎯 Setup blockchain endpoint and wallet for hash publishing   |
 | `INFRA-06` | 🎯 SSL certificates and cert signing flow for relays          |
 | `INFRA-07` | 🎯 Monitoring (Grafana, Prometheus) for relay and server logs |
-
-
 
 technolog for frontend is react typoescritp tailwind css

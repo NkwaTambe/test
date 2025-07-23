@@ -26,7 +26,6 @@ export async function storeKeyPair() {
   }
 }
 
-
 // Function to retrieve the key pair from IndexedDB
 export async function retrieveKeyPair(kid: number) {
   console.log(`Retrieving key pair with ID: ${kid} from IndexedDB...`);
@@ -36,7 +35,6 @@ export async function retrieveKeyPair(kid: number) {
     console.log("Key pair retrieved successfully:", retrievedRecord);
 
     const { pub: publicKey, priv: privateKey } = retrievedRecord.value;
-
 
     return { publicKey, privateKey };
   } else {

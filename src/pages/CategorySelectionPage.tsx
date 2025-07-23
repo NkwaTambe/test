@@ -17,19 +17,24 @@ const CategorySelectionPage: React.FC<CategorySelectionPageProps> = ({ onSelectC
   ];
 
   return (
-    <div className="text-center py-8 animate-fade-in">
-      <h2 className="text-3xl font-bold text-gray-800 mb-4">{t('selectCategoryTitle')}</h2>
-      <p className="text-gray-600 mb-8 max-w-2xl mx-auto">{t('selectCategoryDescription')}</p>
-      
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mx-auto animate-fade-in-delay">
-        {categoryDetails.map(category => (
-          <EventCategoryCard
-            key={category.name}
-            category={category.name}
-            icon={category.icon}
-            onClick={() => onSelectCategory(category.name)}
-          />
-        ))}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-purple-100">
+      <div className="bg-white/80 shadow-xl rounded-3xl px-8 py-12 max-w-3xl w-full flex flex-col items-center relative overflow-hidden animate-fade-in-up">
+        <h2 className="text-3xl font-extrabold text-gray-900 mb-3 tracking-tight drop-shadow-sm">
+          {t('selectCategoryTitle')}
+        </h2>
+        <p className="text-lg text-gray-600 mb-8 font-medium max-w-2xl mx-auto">
+          {t('selectCategoryDescription')}
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full animate-fade-in-delay">
+          {categoryDetails.map(category => (
+            <EventCategoryCard
+              key={category.name}
+              category={category.name}
+              icon={category.icon}
+              onClick={() => onSelectCategory(category.name)}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

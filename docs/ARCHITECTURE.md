@@ -1,6 +1,7 @@
 # EventApp Architecture & Key Mechanisms
 
 ## Table of Contents
+
 1. [System Overview](#system-overview)
 2. [Key Pair Mechanism](#key-pair-mechanism)
 3. [Event Creation & Submission Flow](#event-creation--submission-flow)
@@ -21,16 +22,18 @@ EventApp is a decentralized event reporting system with the following main compo
 ## Key Pair Mechanism
 
 ### Key Generation
+
 1. **Initialization**:
    - On first launch, the app generates an ECDSA key pair using the P-256 curve (ES256)
    - Keys are stored in the browser's localStorage for persistence
    - The key pair is used for authenticating event submissions
 
 2. **Key Storage**:
+
    ```typescript
    // Key storage in localStorage
-   const KEY_PAIR_STORAGE_KEY = 'event-app-key-pair';
-   
+   const KEY_PAIR_STORAGE_KEY = "event-app-key-pair";
+
    // Key pair interface
    interface KeyPair {
      publicKey: JsonWebKey;
@@ -57,6 +60,7 @@ EventApp is a decentralized event reporting system with the following main compo
    - Client-side validation based on label constraints
 
 2. **Event Packaging**:
+
    ```typescript
    interface EventPackage {
      annotations: EventAnnotation[];
@@ -123,17 +127,20 @@ EventApp is a decentralized event reporting system with the following main compo
 ## UI Components & State Management
 
 ### Core Components
+
 - **App**: Root component with language switching
 - **EventForm**: Dynamic form for event creation
 - **CameraCapture**: Media capture component
 - **LanguageSwitcher**: UI for changing languages
 
 ### State Management
+
 - Uses React hooks for local state
 - Custom hooks for key management and label handling
 - Context for global state when needed
 
 ### Styling
+
 - TailwindCSS for utility-first styling
 - Responsive design for mobile and desktop
 - Accessible UI components
@@ -141,11 +148,13 @@ EventApp is a decentralized event reporting system with the following main compo
 ## Development & Testing
 
 ### Setup
+
 1. Clone the repository
 2. Install dependencies: `npm install`
 3. Start development server: `npm run dev`
 
 ### Testing
+
 - Unit tests for core functionality
 - Integration tests for user flows
 - E2E tests for critical paths
@@ -153,11 +162,13 @@ EventApp is a decentralized event reporting system with the following main compo
 ## Deployment
 
 ### Requirements
+
 - Node.js 16+
 - Modern web browser with WebCrypto API support
 - HTTPS for production deployment
 
 ### Build
+
 ```bash
 npm run build
 ```

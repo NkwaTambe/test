@@ -15,8 +15,8 @@ interface FormData extends Record<string, FieldValue> { }
 
 // Helper to get localized text from a string or LocalizedText object
 const getLocalizedText = (text: string | LocalizedText | undefined): string => {
-  if (!text) return '';
-  if (typeof text === 'string') return text;
+  if (!text) return "";
+  if (typeof text === "string") return text;
   return text.en; // Default to English for now, will be updated with i18n
 };
 
@@ -37,27 +37,31 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
     const { name, type } = e.target;
     const target = e.target as HTMLInputElement;
     let value: FieldValue;
     if (type === 'checkbox') {
       value = target.checked;
-    } else if (type === 'number') {
-      value = target.value === '' ? null : Number(target.value);
+    } else if (type === "number") {
+      value = target.value === "" ? null : Number(target.value);
     } else {
-      value = target.value === '' ? null : target.value;
+      value = target.value === "" ? null : target.value;
     }
 
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
 
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: ''
+        [name]: "",
       }));
     }
   };
@@ -65,7 +69,7 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
       setMediaFile(e.target.files[0]);
-      setErrors(prev => ({ ...prev, media: '' }));
+      setErrors((prev) => ({ ...prev, media: "" }));
     }
   };
 
@@ -91,7 +95,7 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
     const { isValid: isFormDataValid, errors: formErrors } = validateFormData(cleanData, labels);
     const newErrors: Record<string, string> = { ...formErrors };
     if (!mediaFile) {
-      newErrors.media = t('mediaRequired');
+      newErrors.media = t("mediaRequired");
     }
     setErrors(newErrors);
     return isFormDataValid && Object.keys(newErrors).length === 0;
@@ -116,8 +120,8 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
         mediaFile,
         {
           createdBy,
-          source: 'web'
-        }
+          source: "web",
+        },
       );
 
       // Debug: Log AWS env variables
@@ -158,8 +162,8 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
 
       toast.success(t('eventSaved'));
     } catch (error) {
-      console.error('Error saving event:', error);
-      toast.error(t('saveError'));
+      console.error("Error saving event:", error);
+      toast.error(t("saveError"));
     } finally {
       setIsSubmitting(false);
     }
@@ -178,6 +182,7 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
         }
       });
 
+
       cleanData.description = formData.description || null;
       cleanData.priority = formData.priority || 'medium';
 
@@ -187,15 +192,16 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
         mediaFile,
         {
           createdBy,
-          source: 'web'
-        }
+          source: "web",
+        },
       );
 
+
       await downloadEventPackage(eventPackage);
-      toast.success(t('draftSaved'));
+      toast.success(t("draftSaved"));
     } catch (error) {
-      console.error('Error saving draft:', error);
-      toast.error(t('saveError'));
+      console.error("Error saving draft:", error);
+      toast.error(t("saveError"));
     }
   }, [formData, mediaFile, labels, createdBy, t]);
 
@@ -203,35 +209,47 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
   const categoryName = categoryLabel ? (i18n.language === 'fr' ? categoryLabel.name_fr : categoryLabel.name_en) : '';
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 p-6 bg-white rounded-lg shadow-lg max-w-3xl mx-auto">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">{t('newEventFor', { category: categoryName })}</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-purple-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="bg-white/80 shadow-xl rounded-3xl px-8 py-10 w-full max-w-3xl relative overflow-hidden animate-fade-in-up">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-extrabold text-gray-900 mb-2 tracking-tight drop-shadow-sm">
+            {t('newEventFor', { category: categoryName })}
+          </h2>
+          <p className="text-lg text-gray-600">
+            {t('fillFormDetails')}
+          </p>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-6">
 
       {/* Dynamic Form Fields from Labels */}
-      <div className="space-y-4">
+      <div className="space-y-6 bg-white/50 p-6 rounded-2xl shadow-sm border border-gray-100">
         {labels
           .filter(label => label.type !== 'media')
           .map((label) => {
-            const labelName = i18n.language === 'fr' ? label.name_fr : label.name_en;
+            const labelName =
+              i18n.language === "fr" ? label.name_fr : label.name_en;
             const labelId = `field-${label.labelId}`;
             const error = errors[label.labelId];
 
             // Use textarea for description
             if (label.labelId === '4' && label.type === 'text') {
               return (
-                <div key={label.labelId} className="mb-4">
-                  <label htmlFor={labelId} className="block text-sm font-medium text-gray-700 mb-1">
+                <div key={label.labelId} className="space-y-2">
+                  <label htmlFor={labelId} className="block text-sm font-medium text-gray-700">
                     {labelName} {label.required && <span className="text-red-500">*</span>}
                   </label>
-                  <textarea
-                    id={labelId}
-                    name={label.labelId}
-                    value={formData[label.labelId] as string || ''}
-                    onChange={handleChange}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[100px] resize-y"
-                    disabled={isSubmitting}
-                    required={label.required}
-                    placeholder="Describe the event..."
-                  />
+                  <div className="mt-1 relative rounded-md shadow-sm">
+                    <textarea
+                      id={labelId}
+                      name={label.labelId}
+                      value={formData[label.labelId] as string || ''}
+                      onChange={handleChange}
+                      className="w-full rounded-xl border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 min-h-[120px] resize-y"
+                      disabled={isSubmitting}
+                      required={label.required}
+                      placeholder={getLocalizedText(label.placeholder) || t('describeEvent')}
+                    />
+                  </div>
                   {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
                   {label.helpText && <p className="mt-1 text-xs text-gray-500">{getLocalizedText(label.helpText)}</p>}
                 </div>
@@ -240,8 +258,12 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
 
             return (
               <div key={label.labelId} className="space-y-2">
-                <label htmlFor={labelId} className="block text-sm font-medium text-gray-700">
-                  {labelName} {label.required && <span className="text-red-500">*</span>}
+                <label
+                  htmlFor={labelId}
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  {labelName}
+                  {label.required && <span className="text-red-500 ml-1">*</span>}
                 </label>
 
                 {/* Date Field */}
@@ -252,7 +274,7 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
                     name={label.labelId}
                     value={formData[label.labelId] as string || ''}
                     onChange={handleChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+                    className="w-full rounded-xl border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm"
                     disabled={isSubmitting}
                     required={label.required}
                   />
@@ -264,9 +286,9 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
                     type="text"
                     id={labelId}
                     name={label.labelId}
-                    value={String(formData[label.labelId] || '')}
+                    value={String(formData[label.labelId] || "")}
                     onChange={handleChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+                    className="w-full rounded-xl border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm"
                     disabled={isSubmitting}
                     required={label.required}
                     placeholder={getLocalizedText(label.placeholder)}
@@ -281,7 +303,7 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
                     name={label.labelId}
                     value={Number(formData[label.labelId] || 0)}
                     onChange={handleChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+                    className="w-full rounded-xl border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm"
                     min={label.constraints?.min}
                     max={label.constraints?.max}
                     step={label.constraints?.step}
@@ -300,7 +322,7 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
                       name={label.labelId}
                       checked={!!formData[label.labelId]}
                       onChange={handleChange}
-                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 accent-blue-500"
                       disabled={isSubmitting}
                     />
                   </div>
@@ -311,19 +333,20 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
                   <select
                     id={labelId}
                     name={label.labelId}
-                    value={formData[label.labelId] as string || ''}
+                    value={(formData[label.labelId] as string) || ""}
                     onChange={handleChange}
-                    className="mt-1 block w-full p-2 text-base border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                    className="w-full rounded-xl border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm"
                     disabled={isSubmitting}
                   >
-                    <option value="">{t('selectOption')}</option>
-                    {label.options?.map(option => (
+                    <option value="">{t("selectOption")}</option>
+                    {label.options?.map((option) => (
                       <option key={option} value={option}>
                         {option}
                       </option>
                     ))}
                   </select>
                 )}
+
 
                 {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
                 {label.helpText && (
@@ -337,10 +360,10 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
       </div>
 
       {/* Media Section - Camera, Upload, and Drag-and-Drop */}
-      <div className="mb-4">
-        <div className="flex justify-center space-x-4">
-          <label className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center cursor-pointer">
-            <Upload className="inline mr-2" size={16} />
+      <div className="mb-4 bg-white/70 p-6 rounded-2xl shadow-inner border border-gray-100">
+        <div className="flex flex-col sm:flex-row justify-center gap-4">
+          <label className="bg-blue-500 text-white px-5 py-3 rounded-full shadow-md hover:bg-blue-600 flex items-center cursor-pointer transition-all duration-200">
+            <Upload className="inline mr-2" size={18} />
             {t('uploadMedia')}
             <input
               type="file"
@@ -349,8 +372,8 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
               onChange={handleFileChange}
             />
           </label>
-          <label className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 flex items-center cursor-pointer">
-            <Camera className="mr-2" size={16} />
+          <label className="bg-green-500 text-white px-5 py-3 rounded-full shadow-md hover:bg-green-600 flex items-center cursor-pointer transition-all duration-200">
+            <Camera className="mr-2" size={18} />
             {t('takePhoto')}
             <input
               type="file"
@@ -364,7 +387,7 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
         {/* Drag-and-drop area for desktop */}
         <div className="hidden md:block mt-4">
           <div
-            className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-400"
+            className="border-2 border-dashed border-blue-300 bg-blue-50/30 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 transition-all duration-200"
             onDrop={e => {
               e.preventDefault();
               if (e.dataTransfer.files?.[0]) {
@@ -374,20 +397,21 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
             }}
             onDragOver={e => e.preventDefault()}
           >
-            <p className="text-sm text-gray-500">{t('orDragAndDrop')}</p>
+            <p className="text-base text-blue-500 font-medium">{t('orDragAndDrop')}</p>
           </div>
         </div>
         {mediaFile && (
-          <div className="relative mt-4">
+          <div className="relative mt-6 flex flex-col items-center">
             <img
               src={URL.createObjectURL(mediaFile)}
               alt="Preview"
-              className="max-h-64 mx-auto mb-4 rounded"
+              className="max-h-64 mx-auto mb-4 rounded-xl shadow-md border border-gray-200"
             />
             <button
               type="button"
               onClick={() => setMediaFile(null)}
-              className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+              className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 shadow-md"
+              title="Remove image"
             >
               &times;
             </button>
@@ -395,38 +419,56 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
         )}
       </div>
 
-      <div className="flex justify-end space-x-4 mt-8">
+      <div className="flex flex-col sm:flex-row justify-end gap-4 mt-10">
         <button
           type="button"
           onClick={handleSaveDraft}
           disabled={isSubmitting || !mediaFile}
-          className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center px-6 py-3 border border-gray-300 shadow-md text-base font-semibold rounded-full text-gray-700 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
         >
-          <Save className="h-4 w-4 mr-2" />
-          {t('save')}
+          <Save className="h-5 w-5 mr-2" />
+          {t("save")}
         </button>
         <button
           type="submit"
           disabled={isSubmitting || !mediaFile}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center px-6 py-3 border border-transparent text-base font-semibold rounded-full shadow-md text-white bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
         >
           {isSubmitting ? (
             <>
-              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <svg
+                className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
               </svg>
-              {t('saving')}
+              {t("saving")}
             </>
           ) : (
             <>
-              <Send className="h-4 w-4 mr-2" />
-              {t('submit')}
+              <Send className="h-5 w-5 mr-2" />
+              {t("submit")}
             </>
           )}
         </button>
       </div>
     </form>
+  </div>
+</div>
   );
 };
 
