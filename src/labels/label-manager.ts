@@ -7,78 +7,78 @@ export interface Label {
   labelId: string;
   name_en: string;
   name_fr: string;
-  type: 'date' | 'text' | 'number' | 'enum' | 'media' | 'boolean';
+  type: "date" | "text" | "number" | "enum" | "media" | "boolean";
   required: boolean;
   placeholder?: string | LocalizedText;
   helpText?: string | LocalizedText;
-  constraints?: { 
-    maxLength?: number; 
-    minLength?: number; 
-    pattern?: string; 
-    min?: number; 
-    max?: number; 
+  constraints?: {
+    maxLength?: number;
+    minLength?: number;
+    pattern?: string;
+    min?: number;
+    max?: number;
     step?: number;
   };
   options?: string[];
 }
 
-const LABELS_STORAGE_KEY = 'event-app-labels';
+const LABELS_STORAGE_KEY = "event-app-labels";
 
 // Mock function to fetch labels from a relay
 export async function fetchLabels(): Promise<Label[]> {
-  console.log('Fetching labels...');
+  console.log("Fetching labels...");
   // In a real implementation, this would be a network request to a relay.
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     setTimeout(() => {
       const labels: Label[] = [
-        { 
-          labelId: '1', 
-          name_en: 'Event Name', 
-          name_fr: 'Nom de l\'événement', 
-          type: 'text', 
-          required: true, 
-          constraints: { maxLength: 35 } 
-        },
-        { 
-          labelId: '2', 
-          name_en: 'Event Date', 
-          name_fr: 'Date de l\'événement', 
-          type: 'date', 
-          required: true 
-        },
-        { 
-          labelId: '3', 
-          name_en: 'Category', 
-          name_fr: 'Catégorie', 
-          type: 'enum', 
-          required: true, 
-          options: ['Music', 'Sports', 'Art'] 
-        },
-        { 
-          labelId: '4', 
-          name_en: 'Description', 
-          name_fr: 'Description', 
-          type: 'text',
-          required: false,
-          constraints: { maxLength: 500 }
-        },
-        { 
-          labelId: '5', 
-          name_en: 'Priority', 
-          name_fr: 'Priorité', 
-          type: 'enum',
+        {
+          labelId: "1",
+          name_en: "Event Name",
+          name_fr: "Nom de l'événement",
+          type: "text",
           required: true,
-          options: ['low', 'medium', 'high']
+          constraints: { maxLength: 35 },
         },
-        { 
-          labelId: '6', 
-          name_en: 'Photo', 
-          name_fr: 'Photo', 
-          type: 'media', 
-          required: false 
+        {
+          labelId: "2",
+          name_en: "Event Date",
+          name_fr: "Date de l'événement",
+          type: "date",
+          required: true,
+        },
+        {
+          labelId: "3",
+          name_en: "Category",
+          name_fr: "Catégorie",
+          type: "enum",
+          required: true,
+          options: ["Music", "Sports", "Art"],
+        },
+        {
+          labelId: "4",
+          name_en: "Description",
+          name_fr: "Description",
+          type: "text",
+          required: false,
+          constraints: { maxLength: 500 },
+        },
+        {
+          labelId: "5",
+          name_en: "Priority",
+          name_fr: "Priorité",
+          type: "enum",
+          required: true,
+          options: ["low", "medium", "high"],
+        },
+        {
+          labelId: "6",
+          name_en: "Photo",
+          name_fr: "Photo",
+          type: "media",
+          required: false,
         },
       ];
-      console.log('Labels received:', labels);
+      console.log("Labels received:", labels);
       resolve(labels);
     }, 1000);
   });

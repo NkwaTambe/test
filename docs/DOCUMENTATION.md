@@ -127,6 +127,7 @@ The application supports multiple languages through the `i18next` library. Trans
    - Git
 
 2. **Installation**
+
    ```bash
    git clone <repository-url>
    cd <project-directory>
@@ -134,9 +135,11 @@ The application supports multiple languages through the `i18next` library. Trans
    ```
 
 3. **Development Server**
+
    ```bash
    npm run dev
    ```
+
    Runs the app in development mode. Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
 4. **Production Build**
