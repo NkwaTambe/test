@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react-swc";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
-  base: "./",
+  base: "/test/",
   plugins: [
     react(),
     VitePWA({
@@ -11,19 +11,19 @@ export default defineConfig({
       manifest: {
         name: "ReportHub",
         short_name: "ReportHub",
-        start_url: "/",
-        scope: "/",
+        start_url: "/test/",
+        scope: "/test/",
         display: "standalone",
         background_color: "#ffffff",
         theme_color: "#007bff",
         icons: [
           {
-            src: "./download1.png",
+            src: "/test/download1.png",
             sizes: "192x192",
             type: "image/png",
           },
           {
-            src: "./download2.png",
+            src: "/test/download2.png",
             sizes: "512x512",
             type: "image/png",
           },
