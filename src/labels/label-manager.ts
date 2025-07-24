@@ -33,14 +33,6 @@ export async function fetchLabels(): Promise<Label[]> {
       const labels: Label[] = [
         {
           labelId: "1",
-          name_en: "Event Name",
-          name_fr: "Nom de l'événement",
-          type: "text",
-          required: true,
-          constraints: { maxLength: 35 },
-        },
-        {
-          labelId: "3",
           name_en: "Category",
           name_fr: "Catégorie",
           type: "enum",
@@ -48,7 +40,7 @@ export async function fetchLabels(): Promise<Label[]> {
           options: ["Music", "Sports", "Art"],
         },
         {
-          labelId: "4",
+          labelId: "2",
           name_en: "Description",
           name_fr: "Description",
           type: "text",
@@ -56,7 +48,7 @@ export async function fetchLabels(): Promise<Label[]> {
           constraints: { maxLength: 500 },
         },
         {
-          labelId: "5",
+          labelId: "3",
           name_en: "Priority",
           name_fr: "Priorité",
           type: "enum",

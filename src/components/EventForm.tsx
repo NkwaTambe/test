@@ -266,10 +266,6 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
       onSubmit={handleSubmit}
       className="space-y-6 p-6 bg-white rounded-lg shadow-lg max-w-3xl mx-auto"
     >
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">
-        {t("New Event")}
-      </h2>
-
       {/* Dynamic Form Fields from Labels */}
       <div className="space-y-4">
         {labels.map((label) => {
