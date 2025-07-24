@@ -28,13 +28,16 @@
   "openCamera": "Ouvrir l'appareil photo",
   "chooseFromGallery": "Choisir dans la galerie",
   "takePhoto": "Prendre une photo",
+  "uploadImage": "Télécharger l'image",
   "cancel": "Annuler",
   "removeImage": "Supprimer l'image",
   "selectedFile": "Fichier sélectionné",
   "required": "obligatoire",
   "selectAnOption": "Sélectionner une option",
+  "addMedia": "Ajouter une image",
   "submit": "Soumettre l'événement",
   "sendEvent": "Soumettre l'événement",
+  "save": "Enregistrer",
   "shareEventZip": "Télécharger en Zip",
   "eventSentSuccessfully": "Événement envoyé avec succès !",
   "failedToSendEvent": "Échec de l'envoi de l'événement.",
@@ -47,5 +50,8 @@
   "getStartedButton": "Commencer",
   "welcomeMoreInfo": "Cliquez sur 'Commencer' pour commencer à signaler des événements.",
   "selectCategoryTitle": "Choisissez une catégorie d'événement",
-  "selectCategoryDescription": "Sélectionnez la catégorie qui décrit le mieux l'événement que vous souhaitez signaler."
+  "selectCategoryDescription": "Sélectionnez la catégorie qui décrit le mieux l'événement que vous souhaitez signaler.",
+  "describeEventPlaceholder": "Décrivez votre événement ici...",
+  "describeEventHelpText": "Veuillez fournir une description exhaustive de l'événement.",
+  "selectPriorityDescription": "Sélectionnez la priorité de l'événement que vous souhaitez signaler."
 }

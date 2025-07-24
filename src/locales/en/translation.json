@@ -28,13 +28,16 @@
   "openCamera": "Open Camera",
   "chooseFromGallery": "Choose from Gallery",
   "takePhoto": "Take Photo",
+  "uploadImage": "Upload Image",
   "cancel": "Cancel",
   "removeImage": "Remove Image",
   "selectedFile": "Selected file",
   "required": "required",
   "selectAnOption": "Select an option",
+  "addMedia": "Add Image",
   "submit": "Submit Event",
   "sendEvent": "Submit Event",
+  "save": "Save",
   "shareEventZip": "Download as Zip",
   "eventSentSuccessfully": "Event sent successfully!",
   "failedToSendEvent": "Failed to send event.",
@@ -46,6 +49,8 @@
   "welcomeDescription": "Your decentralized platform for reporting events securely and efficiently.",
   "getStartedButton": "Get Started",
   "welcomeMoreInfo": "Click 'Get Started' to begin reporting events.",
-  "selectCategoryTitle": "Choose an Event Category",
-  "selectCategoryDescription": "Select the category that best describes the event you wish to report."
+  "selectCategoryDescription": "Select the category that best describes the event you wish to report.",
+  "describeEventPlaceholder": "Describe your event here...",
+  "describeEventHelpText": "Please provide a detailed description of the event.",
+  "selectPriorityDescription": "Select the priority of the event you wish to report."
 }

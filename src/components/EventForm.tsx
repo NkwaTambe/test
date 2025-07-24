@@ -114,7 +114,7 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
         <div className="flex justify-center space-x-4 mb-4">
           <label className="cursor-pointer bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
             <Upload className="inline mr-2" size={16} />
-            {t("uploadMedia")}
+            {t("uploadImage")}
             <input
               type="file"
               accept="image/*,video/*"
@@ -295,7 +295,7 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
                   disabled={isSubmitting}
                   required={label.required}
-                  placeholder={getLocalizedText(label.placeholder)}
+                  placeholder={t("describeEventPlaceholder")}
                 />
               )}
 
@@ -342,7 +342,7 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
                   className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
                   disabled={isSubmitting}
                 >
-                  <option value="">{t("select option")}</option>
+                  <option value="">{t("selectAnOption")}</option>
                   {label.options?.map((option) => (
                     <option key={option} value={option}>
                       {option}
@@ -354,7 +354,9 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
               {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
               {label.helpText && (
                 <p className="mt-1 text-xs text-gray-500">
-                  {getLocalizedText(label.helpText)}
+                  {typeof label.helpText === "string"
+                    ? t(label.helpText)
+                    : t(label.helpText[i18n.language] || label.helpText.en)}
                 </p>
               )}
             </div>
@@ -365,7 +367,7 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
       {/* Media Upload Section */}
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-700">
-          {t("Add Media")}
+          {t("addMedia")}
         </label>
         <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
           {renderMediaSection()}
