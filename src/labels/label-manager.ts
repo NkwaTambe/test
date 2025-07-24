@@ -37,6 +37,14 @@ export async function fetchLabels(): Promise<Label[]> {
           name_fr: "Catégorie",
           type: "enum",
           required: true,
+          placeholder: {
+            en: "Select an option",
+            fr: "Sélectionnez une option",
+          },
+          helpText: {
+            en: "Select the category that best describes the event you wish to report.",
+            fr: "Sélectionnez la catégorie qui décrit le mieux l'événement que vous souhaitez signaler.",
+          },
           options: ["Music", "Sports", "Art"],
         },
         {
@@ -44,7 +52,15 @@ export async function fetchLabels(): Promise<Label[]> {
           name_en: "Description",
           name_fr: "Description",
           type: "text",
-          required: false,
+          required: true,
+          placeholder: {
+            en: "Describe the event...",
+            fr: "Décrivez l'événement...",
+          },
+          helpText: {
+            en: "Please provide a detailed description of the event.",
+            fr: "Veuillez fournir une description détaillée de l'événement.",
+          },
           constraints: { maxLength: 500 },
         },
         {
@@ -53,6 +69,14 @@ export async function fetchLabels(): Promise<Label[]> {
           name_fr: "Priorité",
           type: "enum",
           required: true,
+          placeholder: {
+            en: "Select an option",
+            fr: "Sélectionnez une option",
+          },
+          helpText: {
+            en: "Select the priority level for the event.",
+            fr: "Sélectionnez le niveau de priorité pour l'événement.",
+          },
           options: ["low", "medium", "high"],
         },
       ];
