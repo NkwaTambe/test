@@ -1,12 +1,12 @@
-import { memo, useCallback } from "react";
+import { memo, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Toaster } from "sonner";
-import { Languages } from "lucide-react";
-import { Routes, Route, useNavigate } from "react-router-dom";
 import { useLabelManagement } from "./hooks/useLabelManagement";
 import useKeyInitialization from "./hooks/useKeyInitialization";
 import EventForm from "./components/EventForm";
 import WelcomeScreen from "./components/WelcomeScreen";
+import i18n from "./i18n";
+
 // Loading spinner component
 const LoadingSpinner = ({ message }: { message: string }) => (
   <div className="min-h-screen bg-primary-100 flex items-center justify-center font-[Inter] antialiased">
@@ -43,17 +43,13 @@ const ErrorDisplay = ({
 
 // Main App component
 const App = memo(() => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { keyPair, keyStatus, error, isLoading } = useKeyInitialization();
   const { labels } = useLabelManagement();
-  const navigate = useNavigate();
+  const [showWelcome, setShowWelcome] = useState(true);
 
   const handleRetry = useCallback(() => window.location.reload(), []);
-
-  const toggleLanguage = () => {
-    const newLang = i18n.language === "en" ? "fr" : "en";
-    i18n.changeLanguage(newLang);
-  };
+  const handleGetStarted = useCallback(() => setShowWelcome(false), []);
 
   // Show loading state
   if (isLoading) {
@@ -65,48 +61,34 @@ const App = memo(() => {
     return <ErrorDisplay error={error} onRetry={handleRetry} />;
   }
 
-  if (!keyPair || labels.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <div className="w-10 h-10 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-gray-600">Loading application data...</p>
-      </div>
-    );
-  }
+  const renderContent = () => {
+    if (showWelcome) {
+      return <WelcomeScreen onGetStarted={handleGetStarted} i18n={i18n} />;
+    }
+
+    if (!keyPair || labels.length === 0) {
+      return (
+        <div className="text-center py-8">
+          <div className="w-10 h-10 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading application data...</p>
+        </div>
+      );
+    }
+
+    return <EventForm labels={labels} keyPair={keyPair} />;
+  };
 
   return (
     <div className="min-h-screen bg-primary-100 flex items-center justify-center font-[Inter] antialiased">
       <Toaster position="top-center" />
-      <div className="backdrop-blur-md bg-white/30 border border-white/20 shadow-lg rounded-2xl px-6 py-10 max-w-6xl w-full relative">
-        <button
-          onClick={toggleLanguage}
-          className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 transition-colors duration-200"
-        >
-          <Languages className="w-6 h-6" />
-        </button>
+      <div className="backdrop-blur-md bg-white/30 border border-white/20 shadow-lg rounded-2xl px-6 py-10 max-w-md w-full">
         <header className="text-center mb-6">
           <h1 className="text-xl font-semibold text-gray-800">
             {t("appTitle")}
           </h1>
           <p className="text-sm text-gray-500">{t("appSubtitle")}</p>
         </header>
-        <main>
-          <Routes>
-            <Route
-              path="/"
-              element={
-                <WelcomeScreen
-                  onGetStarted={() => navigate("/event-form/general")}
-                  i18n={i18n}
-                />
-              }
-            />
-            <Route
-              path="/event-form/:category"
-              element={<EventForm labels={labels} keyPair={keyPair} />}
-            />
-          </Routes>
-        </main>
+        <main>{renderContent()}</main>
       </div>
     </div>
   );
