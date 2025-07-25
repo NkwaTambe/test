@@ -53,5 +53,6 @@
   "selectCategoryDescription": "Sélectionnez la catégorie qui décrit le mieux l'événement que vous souhaitez signaler.",
   "describeEventPlaceholder": "Décrivez votre événement ici...",
   "describeEventHelpText": "Veuillez fournir une description exhaustive de l'événement.",
-  "selectPriorityDescription": "Sélectionnez la priorité de l'événement que vous souhaitez signaler."
+  "selectPriorityDescription": "Sélectionnez la priorité de l'événement que vous souhaitez signaler.",
+  "eventSaved": "Événement enregistré avec succès."
 }
