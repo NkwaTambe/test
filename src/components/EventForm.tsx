@@ -181,7 +181,7 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
 
       // --- Step 1: Get a pre-signed URL from our secure backend ---
 
-      const presignedUrlApiEndpoint = "https://46af8nd05j.execute-api.eu-north-1.amazonaws.com/prod/uploads";
+      const presignedUrlApiEndpoint = "https://46af8nd05j.execute-api.eu-north-1.amazonaws.com/prod/";
 
       const apiResponse = await fetch(presignedUrlApiEndpoint, {
         method: "POST",
