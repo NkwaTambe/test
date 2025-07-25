@@ -23,7 +23,7 @@ const getLocalizedText = (text: string | LocalizedText | undefined): string => {
 
 interface EventFormProps {
   labels: Label[];
-  keyPair?: KeyPair; 
+  keyPair?: KeyPair;
   createdBy?: string;
 }
 
@@ -181,94 +181,101 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
 
       // Validate required fields
       if (!filename || !contentType) {
-        throw new Error(`Missing required fields. Filename: ${filename}, ContentType: ${contentType}`);
+        throw new Error(
+          `Missing required fields. Filename: ${filename}, ContentType: ${contentType}`,
+        );
       }
 
       console.log("Requesting pre-signed URL...");
-      
+
       // 1. First, get the pre-signed URL
       const requestBody = JSON.stringify({
         body: JSON.stringify({
           filename: filename,
-          contentType: contentType
-        })
-      });
-      
-      console.log('Sending request with body:', requestBody);
-      
-      const response = await fetch("https://46af8nd05j.execute-api.eu-north-1.amazonaws.com/prod", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
-        body: requestBody,
+          contentType: contentType,
+        }),
       });
 
+      console.log("Sending request with body:", requestBody);
+
+      const response = await fetch(
+        "https://46af8nd05j.execute-api.eu-north-1.amazonaws.com/prod",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: requestBody,
+        },
+      );
+
       const responseText = await response.text();
-      console.log('Raw response:', responseText);
-      
+      console.log("Raw response:", responseText);
+
       if (!response.ok) {
         let errorData;
         try {
           errorData = responseText ? JSON.parse(responseText) : {};
         } catch (e) {
+          console.error("Error parsing response:", e);
           errorData = { message: responseText };
         }
-        console.error('API Error:', response.status, errorData);
-        throw new Error(errorData.message || `Failed to get upload URL: ${response.status} ${response.statusText}`);
+        console.error("API Error:", response.status, errorData);
+        throw new Error(
+          errorData.message ||
+            `Failed to get upload URL: ${response.status} ${response.statusText}`,
+        );
       }
 
       let responseData;
       try {
         responseData = responseText ? JSON.parse(responseText) : {};
-        console.log('Parsed response data:', responseData);
-        
+        console.log("Parsed response data:", responseData);
+
         // Parse the response body which is a stringified JSON
-        const responseBody = typeof responseData.body === 'string' 
-          ? JSON.parse(responseData.body) 
-          : responseData;
-        
-        console.log('Response body:', responseBody);
-        
+        const responseBody =
+          typeof responseData.body === "string"
+            ? JSON.parse(responseData.body)
+            : responseData;
+
+        console.log("Response body:", responseBody);
+
         // Extract the uploadUrl from the parsed response body
         const { uploadUrl } = responseBody;
-    
+
         if (!uploadUrl) {
-          console.error('No uploadUrl in response:', responseData);
+          console.error("No uploadUrl in response:", responseData);
           throw new Error("Server did not provide an upload URL");
         }
-        
-        console.log('Uploading to URL:', uploadUrl);
-        
+
+        console.log("Uploading to URL:", uploadUrl);
+
         // --- Step 2: Upload the file directly to S3 using the pre-signed URL ---
         const uploadResponse = await fetch(uploadUrl, {
           method: "PUT",
           body: zipBlob,
-          headers: { 
-            "Content-Type": contentType
+          headers: {
+            "Content-Type": contentType,
           },
         });
 
         if (!uploadResponse.ok) {
           const errorText = await uploadResponse.text();
-          console.error('Upload error:', uploadResponse.status, errorText);
-          throw new Error(`Failed to upload the file to S3: ${uploadResponse.status} ${uploadResponse.statusText}`);
+          console.error("Upload error:", uploadResponse.status, errorText);
+          throw new Error(
+            `Failed to upload the file to S3: ${uploadResponse.status} ${uploadResponse.statusText}`,
+          );
         }
-        
-        console.log('File uploaded successfully');
+        setFormData({});
+        setMediaFile(null);
+        toast.success(t("eventSaved"));
+
         return uploadResponse;
       } catch (e) {
-        console.error('Failed to process response:', e);
-        throw new Error('Failed to process the server response');
+        console.error("Failed to process response:", e);
+        throw new Error("Failed to process the server response");
       }
-
-      // --- Success ---
-
-      setFormData({});
-      setMediaFile(null);
-      toast.success(t("eventSaved"));
-
     } catch (error) {
       console.error("Error saving event:", error);
       toast.error(
