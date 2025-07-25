@@ -2,7 +2,6 @@ import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Camera, Upload, Send, Save } from "lucide-react";
 import { toast } from "sonner";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import type { Label, LocalizedText } from "../labels/label-manager";
 import { createEventPackage, validateFormData } from "../utils/event-packer";
 import {
@@ -154,8 +153,12 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (!validate()) {
+      toast.error(t("validationError"));
+      return;
+    }
     setIsSubmitting(true);
+
     try {
       // Create a clean data object with only the fields that match our labels
       const cleanData: Record<string, FieldValue> = {};
@@ -164,66 +167,60 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
           cleanData[label.labelId] = formData[label.labelId];
         }
       });
+
       const eventPackage = await createEventPackage(
         cleanData,
         labels,
-        mediaFile || null, // Make mediaFile optional
-        {
-          createdBy,
-          source: "web",
-        },
+        mediaFile,
+        { createdBy, source: "web" },
       );
-
-      // Debug: Log AWS env variables
-      console.log("region", import.meta.env.VITE_AWS_REGION);
-      console.log("accessKeyId", import.meta.env.VITE_AWS_ACCESS_KEY_ID);
-      console.log(
-        "secretAccessKey",
-        import.meta.env.VITE_AWS_SECRET_ACCESS_KEY,
-      );
-      console.log("bucket", import.meta.env.VITE_S3_BUCKET_NAME);
-
-      // Check for missing env vars
-      if (
-        !import.meta.env.VITE_AWS_REGION ||
-        !import.meta.env.VITE_AWS_ACCESS_KEY_ID ||
-        !import.meta.env.VITE_AWS_SECRET_ACCESS_KEY ||
-        !import.meta.env.VITE_S3_BUCKET_NAME
-      ) {
-        toast.error(
-          "AWS configuration is missing. Please check your .env.local file and restart the dev server.",
-        );
-        throw new Error("Missing AWS configuration");
-      }
-
-      // S3 Upload Logic
-      const s3Client = new S3Client({
-        region: import.meta.env.VITE_AWS_REGION,
-        credentials: {
-          accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID,
-          secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY,
-        },
-      });
 
       const zipBlob = await exportEventPackageAsZip(eventPackage);
-      const zipArrayBuffer = await zipBlob.arrayBuffer();
+      const filename = `event-${eventPackage.id}.zip`;
+      const contentType = "application/zip";
 
-      const uploadParams = {
-        Bucket: import.meta.env.VITE_S3_BUCKET_NAME,
-        Key: `event-${Date.now()}.zip`,
-        Body: zipArrayBuffer,
-        ContentType: "application/zip",
-      };
+      // --- Step 1: Get a pre-signed URL from our secure backend ---
 
-      await s3Client.send(new PutObjectCommand(uploadParams));
+      const presignedUrlApiEndpoint = "https://46af8nd05j.execute-api.eu-north-1.amazonaws.com/prod";
+
+      const apiResponse = await fetch(presignedUrlApiEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          filename: filename,
+          contentType: contentType,
+        }),
+      });
+
+      if (!apiResponse.ok) {
+        throw new Error("Failed to get a pre-signed URL from the server.");
+      }
+
+      const { uploadUrl } = await apiResponse.json();
+
+      // --- Step 2: Upload the file directly to S3 using the pre-signed URL ---
+
+      const uploadResponse = await fetch(uploadUrl, {
+        method: "PUT",
+        body: zipBlob,
+        headers: { "Content-Type": contentType },
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error("Failed to upload the file to S3.");
+      }
+
+      // --- Success ---
 
       setFormData({});
       setMediaFile(null);
-
       toast.success(t("eventSaved"));
+
     } catch (error) {
       console.error("Error saving event:", error);
-      toast.error(t("saveError"));
+      toast.error(
+        error instanceof Error ? error.message : String(t("saveError")),
+      );
     } finally {
       setIsSubmitting(false);
     }
