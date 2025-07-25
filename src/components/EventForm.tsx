@@ -18,12 +18,12 @@ interface FormData extends Record<string, FieldValue> {}
 const getLocalizedText = (text: string | LocalizedText | undefined): string => {
   if (!text) return "";
   if (typeof text === "string") return text;
-  return text.en; // Default to English for now, will be updated with i18n
+  return text.en;
 };
 
 interface EventFormProps {
   labels: Label[];
-  keyPair?: KeyPair; // Made optional since it's not used
+  keyPair?: KeyPair; 
   createdBy?: string;
 }
 
@@ -179,35 +179,88 @@ const EventForm: React.FC<EventFormProps> = ({ labels, createdBy }) => {
       const filename = `event-${eventPackage.id}.zip`;
       const contentType = "application/zip";
 
-      // --- Step 1: Get a pre-signed URL from our secure backend ---
-
-      const presignedUrlApiEndpoint = "https://46af8nd05j.execute-api.eu-north-1.amazonaws.com/prod";
-
-      const apiResponse = await fetch(presignedUrlApiEndpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          filename: filename,
-          contentType: contentType,
-        }),
-      });
-
-      if (!apiResponse.ok) {
-        throw new Error("Failed to get a pre-signed URL from the server.");
+      // Validate required fields
+      if (!filename || !contentType) {
+        throw new Error(`Missing required fields. Filename: ${filename}, ContentType: ${contentType}`);
       }
 
-      const { uploadUrl } = await apiResponse.json();
-
-      // --- Step 2: Upload the file directly to S3 using the pre-signed URL ---
-
-      const uploadResponse = await fetch(uploadUrl, {
-        method: "PUT",
-        body: zipBlob,
-        headers: { "Content-Type": contentType },
+      console.log("Requesting pre-signed URL...");
+      
+      // 1. First, get the pre-signed URL
+      const requestBody = JSON.stringify({
+        body: JSON.stringify({
+          filename: filename,
+          contentType: contentType
+        })
+      });
+      
+      console.log('Sending request with body:', requestBody);
+      
+      const response = await fetch("https://46af8nd05j.execute-api.eu-north-1.amazonaws.com/prod", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: requestBody,
       });
 
-      if (!uploadResponse.ok) {
-        throw new Error("Failed to upload the file to S3.");
+      const responseText = await response.text();
+      console.log('Raw response:', responseText);
+      
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = responseText ? JSON.parse(responseText) : {};
+        } catch (e) {
+          errorData = { message: responseText };
+        }
+        console.error('API Error:', response.status, errorData);
+        throw new Error(errorData.message || `Failed to get upload URL: ${response.status} ${response.statusText}`);
+      }
+
+      let responseData;
+      try {
+        responseData = responseText ? JSON.parse(responseText) : {};
+        console.log('Parsed response data:', responseData);
+        
+        // Parse the response body which is a stringified JSON
+        const responseBody = typeof responseData.body === 'string' 
+          ? JSON.parse(responseData.body) 
+          : responseData;
+        
+        console.log('Response body:', responseBody);
+        
+        // Extract the uploadUrl from the parsed response body
+        const { uploadUrl } = responseBody;
+    
+        if (!uploadUrl) {
+          console.error('No uploadUrl in response:', responseData);
+          throw new Error("Server did not provide an upload URL");
+        }
+        
+        console.log('Uploading to URL:', uploadUrl);
+        
+        // --- Step 2: Upload the file directly to S3 using the pre-signed URL ---
+        const uploadResponse = await fetch(uploadUrl, {
+          method: "PUT",
+          body: zipBlob,
+          headers: { 
+            "Content-Type": contentType
+          },
+        });
+
+        if (!uploadResponse.ok) {
+          const errorText = await uploadResponse.text();
+          console.error('Upload error:', uploadResponse.status, errorText);
+          throw new Error(`Failed to upload the file to S3: ${uploadResponse.status} ${uploadResponse.statusText}`);
+        }
+        
+        console.log('File uploaded successfully');
+        return uploadResponse;
+      } catch (e) {
+        console.error('Failed to process response:', e);
+        throw new Error('Failed to process the server response');
       }
 
       // --- Success ---
